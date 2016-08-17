@@ -2,6 +2,15 @@
 
 <!-- the Javascript file js/addon.js is imported in the layout -->
 <!-- It contains functions which execute actions for buttons/links in this page -->
+<style>
+.sauce-job-status {
+
+}
+.sauce-job-status svg { max-width:100%; }
+.sauce-job-status-error { fill: #f68d38; }
+.sauce-job-status-failed { fill: #ec4047; }
+.sauce-job-status-passed { fill: #6acc00; }
+</style>
 
 <section class="aui-connect-page" role="main">
   <section class="aui-connect-content with-list">
@@ -9,14 +18,16 @@
       {{#each jobs as |job|}}
       <li class="aui-connect-list-item">
         <span class="aui-avatar aui-avatar-xsmall">
-          <span class="aui-avatar-inner">
-            <img style="background-color: #ccc;" alt="{{job.consolidated_status}}" src="img/job_status/{{job.consolidated_status}}.png" />
+          <span class="aui-avatar-inner sauce-job-status sauce-job-status-{{job.consolidated_status}}">
+            {{svg (concat "./public/img/job_status/" job.consolidated_status ".svg")}}
           </span>
         </span>
         <span class="aui-connect-list-item-title">{{job.name}}</span>
         <ul class="aui-connect-list-item-attributes">
-          <li>{{#if job.build}}{{job.build}}{{else}}No Build{{#/if}}</li>
           <li>{{formatTime job.creation_time}}</li>
+          <li title="{{#if job.build}}{{job.build}}{{else}}No Build{{/if}}"
+						  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%">
+              {{#if job.build}}{{job.build}}{{else}}No Build{{/if}}</li>
         </ul>
         <div class="aui-connect-list-item-description">
           List view descriptions are optional.
@@ -27,5 +38,6 @@
   </section>
 </section>
 <footer class="aui-connect-footer">
-  <a href="#">Log out</a>
+  <span>Powered by: <img class="text-icon" src="/img/logo.png" width="12" height="12" /> Saucelabs</span>
+  <a class="pull-right" href="#">Logout</a>
 </footer>

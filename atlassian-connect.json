@@ -71,28 +71,7 @@
         "url": "{{localBaseUrl}}/dialog/video/{message.metadata.jobId}",
         "options": {
           "style": "normal",
-          "size": { "width": "400px", "height": "200px" }
-        }
-      },
-      {
-        "key": "sample.dialog",
-        "title": {
-          "value": "Hello Dialog!"
-        },
-        "url": "{{localBaseUrl}}/dialog",
-        "options": {
-          "style": "normal",
-          "primaryAction": {
-            "name": {
-              "value": "Say Hello!"
-            },
-            "key": "sample.dialog.action",
-            "enabled": true
-          },
-          "size": {
-            "width": "400px",
-            "height": "200px"
-          }
+          "size": { "width": "75%", "height": "75%" }
         }
       }
     ],

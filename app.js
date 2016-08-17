@@ -65,6 +65,12 @@ app.use(addon.middleware());
 app.use(expiry(app, {dir: staticDir, debug: devEnv}));
 // Add an hbs helper to fingerprint static resource urls
 hbs.registerHelper('furl', function(url){ return app.locals.furl(url); });
+hbs.registerHelper('svg', function(file) { return new hbs.SafeString(require('fs').readFileSync(file)); }); 
+hbs.registerHelper('concat', function() {
+  var arg = Array.prototype.slice.call(arguments,0);
+  arg.pop();
+  return arg.join('');
+});
 HandlebarsIntl.registerWith(hbs);
 
 // Mount the static resource dir

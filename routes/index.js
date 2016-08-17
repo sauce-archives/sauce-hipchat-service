@@ -94,10 +94,16 @@ module.exports = function (app, addon) {
   // This is an example sidebar controller that can be launched when clicking on the glance.
   // https://developer.atlassian.com/hipchat/guide/dialog-and-sidebar-views/sidebar
   router.get('/sidebar', addon.authenticate(), function (req, res) {
+    const cleanupJob = (job) => {
+      return Object.assign({}, job, { 
+        creation_time: job.creation_time*1000 
+      });
+    };
+
     return sauceAccount.getJobsAsync().then(function(jobs) {
       res.render('sidebar-jobs', {
         identity: req.identity,
-        jobs: jobs.map(job => Object.assign({}, job, { creation_time: job.creation_time*1000 }))
+        jobs: jobs.map(job => cleanupJob(job))
       });
     });
   });
