@@ -1,0 +1,31 @@
+{{!< layout}}
+
+<!-- the Javascript file js/addon.js is imported in the layout -->
+<!-- It contains functions which execute actions for buttons/links in this page -->
+
+<section class="aui-connect-page" role="main">
+  <section class="aui-connect-content with-list">
+    <ol class="aui-connect-list">
+      {{#each jobs as |job|}}
+      <li class="aui-connect-list-item">
+        <span class="aui-avatar aui-avatar-xsmall">
+          <span class="aui-avatar-inner">
+            <img style="background-color: #ccc;" alt="{{job.consolidated_status}}" src="img/job_status/{{job.consolidated_status}}.png" />
+          </span>
+        </span>
+        <span class="aui-connect-list-item-title">{{job.name}}</span>
+        <ul class="aui-connect-list-item-attributes">
+          <li>{{#if job.build}}{{job.build}}{{else}}No Build{{#/if}}</li>
+          <li>{{formatTime job.creation_time}}</li>
+        </ul>
+        <div class="aui-connect-list-item-description">
+          List view descriptions are optional.
+        </div>
+      </li>
+      {{/each}}
+    </ol>
+  </section>
+</section>
+<footer class="aui-connect-footer">
+  <a href="#">Log out</a>
+</footer>

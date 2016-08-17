@@ -1,0 +1,110 @@
+{
+  "key": "sauce-hipchat-service",
+  "name": "Hello!",
+  "description": "My very first HipChat add-on",
+  "vendor": {
+    "name": "Sauce Labs",
+    "url": "https://www.saucelabs.com"
+  },
+  "links": {
+    "self": "{{localBaseUrl}}/atlassian-connect.json",
+    "homepage": "{{localBaseUrl}}"
+  },
+  "capabilities": {
+    "hipchatApiConsumer": {
+      "scopes": [
+        "send_notification",
+        "view_room"
+      ],
+      "avatar": {
+        "url": "{{localBaseUrl}}/img/logo.png",
+        "url@2x": "{{localBaseUrl}}/img/logo.png"
+      }
+    },
+    "installable": {
+      "callbackUrl": "{{localBaseUrl}}/installable"
+    },
+    "configurable": {
+      "url": "{{localBaseUrl}}/config"
+    },
+    "webhook": [{
+      "url": "{{localBaseUrl}}/webhook",
+      "pattern": "^/hello",
+      "event": "room_message",
+      "name": "Hello!",
+      "authentication": "jwt"
+    }, {
+      "url": "{{localBaseUrl}}/saucelabs_url",
+      "pattern": "https?:\/\/saucelabs.com\/beta\/tests\/.*",
+      "event": "room_message",
+      "name": "Sauce Labs",
+      "authentication": "jwt"
+    }],
+    "glance": [
+      {
+        "name": {
+          "value": "Hello!"
+        },
+        "queryUrl": "{{localBaseUrl}}/glance",
+        "key": "sample.glance",
+        "target": "sample.sidebar",
+        "icon": {
+          "url": "{{localBaseUrl}}/img/logo.png",
+          "url@2x": "{{localBaseUrl}}/img/logo.png"
+        }
+      }
+    ],
+    "webPanel": [
+      {
+        "key": "sample.sidebar",
+        "name": {
+          "value": "Hello Sidebar!"
+        },
+        "location": "hipchat.sidebar.right",
+        "url": "{{localBaseUrl}}/sidebar"
+      }
+    ],
+    "dialog": [
+      {
+        "key": "job.video.dialog",
+        "title": { "value": "Video Dialog" },
+        "url": "{{localBaseUrl}}/dialog/video/{message.metadata.jobId}",
+        "options": {
+          "style": "normal",
+          "size": { "width": "400px", "height": "200px" }
+        }
+      },
+      {
+        "key": "sample.dialog",
+        "title": {
+          "value": "Hello Dialog!"
+        },
+        "url": "{{localBaseUrl}}/dialog",
+        "options": {
+          "style": "normal",
+          "primaryAction": {
+            "name": {
+              "value": "Say Hello!"
+            },
+            "key": "sample.dialog.action",
+            "enabled": true
+          },
+          "size": {
+            "width": "400px",
+            "height": "200px"
+          }
+        }
+      }
+    ],
+    "action": [
+      {
+        "key": "sample.action",
+        "name": {
+          "value": "Open Hello Dialog!"
+        },
+        "target": "sample.dialog",
+        "location": "hipchat.input.action"
+      }
+    ]
+  }
+}
