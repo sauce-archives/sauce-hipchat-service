@@ -60,7 +60,8 @@ if (devEnv) {
   const webpackDevMiddleware = require('webpack-dev-middleware');
   app.use(webpackDevMiddleware(compiler, {
     publicPath: config.output.publicPath,
-    stats: { colors: true }
+    stats: 'errors-only'
+    //stats: { colors: true }
   }));
 }
 
