@@ -1,7 +1,7 @@
 {
   "key": "sauce-hipchat-service",
-  "name": "Hello!",
-  "description": "My very first HipChat add-on",
+  "name": "Sauce Labs for HipChat",
+  "description": "Sauce Labs plugin description",
   "vendor": {
     "name": "Sauce Labs",
     "url": "https://www.saucelabs.com"
@@ -28,26 +28,24 @@
       "url": "{{localBaseUrl}}/config"
     },
     "webhook": [{
-      "url": "{{localBaseUrl}}/webhook",
-      "pattern": "^/hello",
+      "url": "{{localBaseUrl}}/webhooks/saucelabs_url",
+      "pattern": "https?:\/\/saucelabs.com\/beta\/tests\/.*",
       "event": "room_message",
-      "name": "Hello!",
+      "name": "Sauce Labs",
       "authentication": "jwt"
     }, {
-      "url": "{{localBaseUrl}}/saucelabs_url",
-      "pattern": "https?:\/\/saucelabs.com\/beta\/tests\/.*",
+      "url": "{{localBaseUrl}}/webhooks/sauce",
+      "pattern": "^\/sauce\b*",
       "event": "room_message",
       "name": "Sauce Labs",
       "authentication": "jwt"
     }],
     "glance": [
       {
-        "name": {
-          "value": "Hello!"
-        },
+        "name": { "value": "Hello!" },
         "queryUrl": "{{localBaseUrl}}/glance",
         "key": "sample.glance",
-        "target": "sample.sidebar",
+        "target": "sidebar.joblist",
         "icon": {
           "url": "{{localBaseUrl}}/img/logo.png",
           "url@2x": "{{localBaseUrl}}/img/logo.png"
@@ -56,9 +54,9 @@
     ],
     "webPanel": [
       {
-        "key": "sample.sidebar",
+        "key": "sidebar.joblist",
         "name": {
-          "value": "Hello Sidebar!"
+          "value": "Sauce Labs Sidebar!"
         },
         "location": "hipchat.sidebar.right",
         "url": "{{localBaseUrl}}/sidebar"
@@ -71,7 +69,7 @@
         "url": "{{localBaseUrl}}/dialog/video/{message.metadata.jobId}",
         "options": {
           "style": "normal",
-          "size": { "width": "75%", "height": "75%" }
+          "size": { "width": "1024px", "height": "768px" }
         }
       }
     ],

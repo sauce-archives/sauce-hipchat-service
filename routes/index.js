@@ -8,9 +8,10 @@ var SauceLabs = require('saucelabs');
 
 SauceLabs.prototype = promisify(SauceLabs.prototype);
 var sauceAccount = new SauceLabs({
-  hostname: '***REMOVED***',
-  username: 'admin',
-  password: '***REMOVED***'
+  debug: 1,
+  hostname: process.env.SAUCE_HOSTNAME,
+  username: process.env.SAUCE_USERNAME,
+  password: process.env.SAUCE_ACCESS_KEY
 });
 
 // This is the heart of your HipChat Connect add-on. For more information,
@@ -40,7 +41,7 @@ module.exports = function (app, addon) {
         'text/html': function () {
           var homepage = url.parse(addon.descriptor.links.homepage);
           if (homepage.hostname === req.hostname && homepage.path === req.path) {
-            res.render('homepage', addon.descriptor);
+            res.render('homepage', Object.assign({}, addon.descriptor, {_key: addon.descriptor.key}));
           } else {
             res.redirect(addon.descriptor.links.homepage);
           }
@@ -95,8 +96,8 @@ module.exports = function (app, addon) {
   // https://developer.atlassian.com/hipchat/guide/dialog-and-sidebar-views/sidebar
   router.get('/sidebar', addon.authenticate(), function (req, res) {
     const cleanupJob = (job) => {
-      return Object.assign({}, job, { 
-        creation_time: job.creation_time*1000 
+      return Object.assign({}, job, {
+        creation_time: job.creation_time*1000
       });
     };
 
@@ -159,9 +160,26 @@ module.exports = function (app, addon) {
         });
     });
 
-  const messageUrlPattern = /https?:\/\/saucelabs.com\/beta\/tests\/([a-zA-Z0-9]{32})/;
+  router.post('/webhooks/sauce', addon.authenticate(), function(req, res) {
+    var sampleGlanceData = {
+      'name': { 'value': 'Hello!' },
+      'label': {
+        'type': 'html',
+        'value': 'Updated Sample Glance'
+      },
+      'target': 'sidebar.joblist',
+      'status': {
+        'type': 'lozenge',
+        'value': { 'label': 'NEW', 'type': 'new' }
+      }
+    };
+    hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'sample.glance', sampleGlanceData);
+    hipchat.sendMessage(req.clientInfo, req.identity.roomId, 'Updating glance')
+    res.sendStatus(200);
+  });
 
-  router.post('/saucelabs_url', addon.authenticate(), function (req, res) {
+  const messageUrlPattern = /https?:\/\/saucelabs.com\/beta\/tests\/([a-zA-Z0-9]{32})/;
+  router.post('/webhooks/saucelabs_url', addon.authenticate(), function (req, res) {
     const message = req.body.item.message.message;
     const results = messageUrlPattern.exec(message);
     const id = results[1];
@@ -235,5 +253,4 @@ module.exports = function (app, addon) {
       });
     });
   });
-
 };
