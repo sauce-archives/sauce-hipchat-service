@@ -14,6 +14,7 @@
     "cors": "^2.7.1",
     "errorhandler": "^1.4.3",
     "es6-promisify-all": "^0.1.0",
+    "escape-html": "^1.0.3",
     "express": "^4.14.0",
     "express-hbs": "^1.0.1",
     "express-promise-router": "^1.0.0",
