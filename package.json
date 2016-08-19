@@ -3,6 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "build": "./bin/build.sh",
+    "heroku-postbuild": "./bin/build.sh",
     "start": "node app.js"
   },
   "dependencies": {
