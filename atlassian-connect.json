@@ -71,6 +71,15 @@
           "style": "normal",
           "size": { "width": "1024px", "height": "768px" }
         }
+      },
+      {
+        "key": "job.screenshots.dialog",
+        "title": { "value": "Screenshots Dialog" },
+        "url": "{{localBaseUrl}}/dialog/screenshots/{jobId}",
+        "options": {
+          "style": "normal",
+          "size": { "width": "1024px", "height": "768px" }
+        }
       }
     ],
     "action": [

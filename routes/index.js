@@ -30,15 +30,36 @@ module.exports = function (app, addon) {
   var hipchat = require('../lib/hipchat')(addon);
   app.use('/', router);
 
+  const getGlanceData = () => {
+    return sauceAccount.getJobsAsync().then(jobs => {
+      let data = {
+        count: jobs.length,
+        statuses: jobs.reduce(function(statusCount, job) {
+          if (!statusCount[job.status]) { statusCount[job.status] = 0; }
+          statusCount[job.status]++;
+          return statusCount;
+        }, {})
+      };
+      let ret = { 'label': { 'type': 'html', 'value': 'Sauce Labs' }, };
+      if (data.statuses.new) {
+        ret.status = {
+          'type': 'lozenge',
+          'value': { 'label': data.statuses.new + ' NEW', 'type': 'error' }
+        };
+      }
+      console.log(data, ret);
+      return ret;
+    });
+  }
+
   // simple healthcheck
   router.get('/healthcheck', function (req, res) {
     res.send('OK');
   });
 
   router.get('/gavin', function(req, res) {
-    sauceAccount.createPublicLinkAsync('5efa2426576f44608b3774eefa38b6ba').then(function(assets) {
-    //sauceAccount.showJobAssetsAsync('5efa2426576f44608b3774eefa38b6ba').then(function(assets) {
-      res.json(assets);
+    addon.settings.client.keys('*:clientInfo', function (err, rep) {
+      res.json(rep);
     });
   });
   // Root route. This route will serve the `addon.json` unless a homepage URL is
@@ -82,24 +103,7 @@ module.exports = function (app, addon) {
   // This is an example glance that shows in the sidebar
   // https://developer.atlassian.com/hipchat/guide/glances
   router.get('/glance', cors(), addon.authenticate(), function (req, res) {
-    return sauceAccount.getJobsAsync().then(function(jobs) {
-      let data = {
-        count: jobs.length,
-        statuses: jobs.reduce(function(statusCount, job) {
-          if (!statusCount[job.status]) { statusCount[job.status] = 0; }
-          statusCount[job.status]++;
-          return statusCount;
-        }, {})
-      };
-      let ret = { 'label': { 'type': 'html', 'value': 'Sauce Labs' }, };
-      if (data.statuses.new) {
-        ret.status = {
-          'type': 'lozenge',
-          'value': { 'label': data.statuses.new + ' NEW', 'type': 'error' }
-        };
-      }
-      res.json(ret);
-    });
+    getGlanceData().then(data => res.json(data));
   });
 
   // This is an example sidebar controller that can be launched when clicking on the glance.
@@ -107,6 +111,7 @@ module.exports = function (app, addon) {
   router.get('/sidebar', addon.authenticate(), function (req, res) {
     return sauceAccount.getJobsAsync().then(function(jobs) {
       res.render('sidebar-jobs', {
+        hostname: sauceAccount.options.hostname,
         identity: req.identity,
         jobs: jobs.map(job => cleanupJob(job))
       });
@@ -124,6 +129,20 @@ module.exports = function (app, addon) {
     });
   });
 
+  router.get('/dialog/screenshots/:jobId', addon.authenticate(), function (req, res) {
+    return sauceAccount.showJobAssetsAsync(req.params.jobId).then(function(assets) {
+      return sauceAccount.createPublicLinkAsync(req.params.jobId).then(function(url) {
+        res.render('screenshots-dialog', {
+          assets: assets,
+          identity: req.identity,
+          jobId: req.params.jobId,
+          hostname: sauceAccount.options.hostname,
+          auth: url.replace(/.*auth=([a-zA-Z0-9]+)/, '$1')
+        });
+      });
+    });
+  });
+
   // This is an example dialog controller that can be launched when clicking on the glance.
   // https://developer.atlassian.com/hipchat/guide/dialog-and-sidebar-views/dialog
   router.get('/dialog', addon.authenticate(), function (req, res) {
@@ -132,53 +151,8 @@ module.exports = function (app, addon) {
     });
   });
 
-  // Sample endpoint to send a card notification back into the chat room
-  // See https://developer.atlassian.com/hipchat/guide/sending-messages
-  router.post('/send_notification',
-    addon.authenticate(),
-    function (req, res) {
-      var card = {
-        "style": "link",
-        "url": "https://www.hipchat.com",
-        "id": uuid.v4(),
-        "title": req.body.messageTitle,
-        "description": "Great teams use HipChat: Group and private chat, file sharing, and integrations",
-        "icon": {
-          "url": "https://hipchat-public-m5.atlassian.com/assets/img/hipchat/bookmark-icons/favicon-192x192.png"
-        }
-      };
-      var msg = '<b>' + card.title + '</b>: ' + card.description;
-      var opts = { 'options': { 'color': 'yellow' } };
-      hipchat.sendMessage(req.clientInfo, req.identity.roomId, msg, opts, card);
-      res.json({ status: "ok" });
-    }
-    );
-
-  // This is an example route to handle an incoming webhook
-  // https://developer.atlassian.com/hipchat/guide/webhooks
-  router.post('/webhook',
-    addon.authenticate(),
-    function (req, res) {
-      hipchat.sendMessage(req.clientInfo, req.identity.roomId, 'pong')
-        .then(function (data) {
-          res.sendStatus(200);
-        });
-    });
-
   router.post('/webhooks/sauce', addon.authenticate(), function(req, res) {
-    var sampleGlanceData = {
-      'name': { 'value': 'Hello!' },
-      'label': {
-        'type': 'html',
-        'value': 'Updated Sample Glance'
-      },
-      'target': 'sidebar.joblist',
-      'status': {
-        'type': 'lozenge',
-        'value': { 'label': 'NEW', 'type': 'new' }
-      }
-    };
-    hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'sample.glance', sampleGlanceData);
+    getGlanceData().then(data => hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'sample.glance', data));
     hipchat.sendMessage(req.clientInfo, req.identity.roomId, 'Updating glance')
     res.sendStatus(200);
   });
@@ -243,13 +217,7 @@ module.exports = function (app, addon) {
             }
           };
           console.log('card', card);
-          hipchat.sendMessage(req.clientInfo, req.identity.roomId, msg, opts, card)
-            .then(function (/*data*/) {
-              res.sendStatus(200);
-            })
-            .catch(err => {
-              console.log('error', err);
-            });
+          return hipchat.sendMessage(req.clientInfo, req.identity.roomId, msg, opts, card);
         });
       });
   });
@@ -258,6 +226,8 @@ module.exports = function (app, addon) {
   // Connect's install flow, check out:
   // https://developer.atlassian.com/hipchat/guide/installation-flow
   addon.on('installed', function (clientKey, clientInfo, req) {
+    console.log('clientKey', clientKey);
+    console.log('clientInfo', clientInfo);
     hipchat.sendMessage(clientInfo, req.body.roomId, 'The ' + addon.descriptor.name + ' add-on has been installed in this room');
   });
 
@@ -270,4 +240,16 @@ module.exports = function (app, addon) {
       });
     });
   });
+
+  const updateAllGlances = () => {
+    addon.settings.client.keys('*:clientInfo', function (err, keys) {
+      keys.forEach(clientInfoStr => {
+        let [clientId] = clientInfoStr.split(':');
+        // hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'sample.glance', sampleGlanceData);
+        console.log(clientId);
+      });
+    });
+  };
+  updateAllGlances();
+  setTimeout(updateAllGlances, 10*1000);
 };
