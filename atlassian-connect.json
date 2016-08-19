@@ -42,7 +42,7 @@
     }],
     "glance": [
       {
-        "name": { "value": "Hello!" },
+        "name": { "value": "Sauce Labs" },
         "queryUrl": "{{localBaseUrl}}/glance",
         "key": "sample.glance",
         "target": "sidebar.joblist",
