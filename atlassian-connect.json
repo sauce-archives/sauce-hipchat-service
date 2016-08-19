@@ -64,6 +64,24 @@
     ],
     "dialog": [
       {
+    		"key": "job.details.dialog",
+        "title": { "value": "Job Details Dialog" },
+        "url": "{{localBaseUrl}}/dialog/job/{jobId}",
+        "options": {
+          "style": "normal",
+          "size": { "width": "1024px", "height": "768px" }
+        }
+      },
+      {
+    		"key": "job.details.dialog-meta",
+        "title": { "value": "Job Details Dialog" },
+        "url": "{{localBaseUrl}}/dialog/job/{message.metadata.sauceJobId}",
+        "options": {
+          "style": "normal",
+          "size": { "width": "1024px", "height": "768px" }
+        }
+      },
+      {
         "key": "job.video.dialog",
         "title": { "value": "Video Dialog" },
         "url": "{{localBaseUrl}}/dialog/video/{jobId}",
@@ -73,9 +91,27 @@
         }
       },
       {
+        "key": "job.video.dialog-meta",
+        "title": { "value": "Video Dialog" },
+        "url": "{{localBaseUrl}}/dialog/video/{message.metadata.sauceJobId}",
+        "options": {
+          "style": "normal",
+          "size": { "width": "1024px", "height": "768px" }
+        }
+      },
+      {
         "key": "job.screenshots.dialog",
         "title": { "value": "Screenshots Dialog" },
         "url": "{{localBaseUrl}}/dialog/screenshots/{jobId}",
+        "options": {
+          "style": "normal",
+          "size": { "width": "1024px", "height": "768px" }
+        }
+      },
+      {
+        "key": "job.screenshots.dialog-meta",
+        "title": { "value": "Screenshots Dialog" },
+        "url": "{{localBaseUrl}}/dialog/screenshots/{message.metadata.sauceJobId}",
         "options": {
           "style": "normal",
           "size": { "width": "1024px", "height": "768px" }
@@ -90,6 +126,42 @@
         },
         "target": "sample.dialog",
         "location": "hipchat.input.action"
+      },
+      {
+        "key": "action.saucelabs.job-details",
+    		"name": { "value": "Open job details" },
+    		"target": "job.details.dialog-meta",
+    		"location": "hipchat.message.action",
+        "conditions": [{
+          "condition": "card_matches",
+          "params": {
+            "sender": "Sauce Labs for HipChat"
+          }
+        }]
+      },
+      {
+        "key": "action.saucelabs.show-video",
+    		"name": { "value": "Show video" },
+    		"target": "job.video.dialog-meta",
+    		"location": "hipchat.message.action",
+        "conditions": [{
+          "condition": "card_matches",
+          "params": {
+            "sender": "Sauce Labs for HipChat"
+          }
+        }]
+      },
+      {
+        "key": "action.saucelabs.show-screenshots",
+    		"name": { "value": "Show screenshots" },
+    		"target": "job.screenshots.dialog-meta",
+    		"location": "hipchat.message.action",
+        "conditions": [{
+          "condition": "card_matches",
+          "params": {
+            "sender": "Sauce Labs for HipChat"
+          }
+        }]
       }
     ]
   }

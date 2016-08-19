@@ -117,15 +117,22 @@ module.exports = function (app, addon) {
     });
   });
 
-  router.get('/dialog/video/:jobId', addon.authenticate(), function (req, res) {
+  const _embed_dialog = (req, res, type) => {
     return sauceAccount.createPublicLinkAsync(req.params.jobId).then(function(url) {
-      res.render('video-dialog', {
+      res.render(`embed-dialog`, {
+        type: type,
         identity: req.identity,
         jobId: req.params.jobId,
         hostname: sauceAccount.options.hostname,
         auth: url.replace(/.*auth=([a-zA-Z0-9]+)/, '$1')
       });
     });
+  };
+  router.get('/dialog/job/:jobId', addon.authenticate(), function (req, res) {
+    return _embed_dialog(req, res, 'job');
+  });
+  router.get('/dialog/video/:jobId', addon.authenticate(), function (req, res) {
+    return _embed_dialog(req, res, 'video');
   });
 
   router.get('/dialog/screenshots/:jobId', addon.authenticate(), function (req, res) {
@@ -188,7 +195,7 @@ module.exports = function (app, addon) {
           var card = {
             'style': 'application',
             'id': uuid.v4(),
-            'metadata': { 'jobId': id },
+            'metadata': { 'sauceJobId': id },
             'format': 'medium',
             'url': `https://${sauceAccount.options.hostname}/beta/tests/${id}`,
             'title': job.name,
