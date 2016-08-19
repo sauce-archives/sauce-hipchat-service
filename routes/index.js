@@ -34,8 +34,8 @@ module.exports = function (app, addon) {
       let data = {
         count: jobs.length,
         statuses: jobs.reduce(function(statusCount, job) {
-          if (!statusCount[job.status]) { statusCount[job.status] = 0; }
-          statusCount[job.status]++;
+          if (!statusCount[job.consolidated_status]) { statusCount[job.consolidated_status] = 0; }
+          statusCount[job.consolidated_status]++;
           return statusCount;
         }, {})
       };
@@ -248,11 +248,14 @@ module.exports = function (app, addon) {
     addon.settings.client.keys('*:clientInfo', function (err, keys) {
       keys.forEach(clientInfoStr => {
         let [clientId] = clientInfoStr.split(':');
-        // hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'sample.glance', sampleGlanceData);
-        console.log(clientId);
+        console.log('a', clientId);
+        addon.loadClientInfo(clientId).then(clientInfo => {
+          return getGlanceData()
+            .then(data => hipchat.updateGlance(clientInfo, { groupId: clientInfo.groupId }, 'sample.glance', data));
+        });
       });
     });
   };
   updateAllGlances();
-  setTimeout(updateAllGlances, 10*1000);
+  setInterval(updateAllGlances, 30*1000);
 };
