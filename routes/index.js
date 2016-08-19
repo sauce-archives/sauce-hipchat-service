@@ -1,4 +1,3 @@
-var http = require('request');
 var cors = require('cors');
 var uuid = require('uuid');
 var url = require('url');
@@ -130,17 +129,21 @@ module.exports = function (app, addon) {
   });
 
   router.get('/dialog/screenshots/:jobId', addon.authenticate(), function (req, res) {
-    return sauceAccount.showJobAssetsAsync(req.params.jobId).then(function(assets) {
-      return sauceAccount.createPublicLinkAsync(req.params.jobId).then(function(url) {
-        res.render('screenshots-dialog', {
-          assets: assets,
-          identity: req.identity,
-          jobId: req.params.jobId,
-          hostname: sauceAccount.options.hostname,
-          auth: url.replace(/.*auth=([a-zA-Z0-9]+)/, '$1')
+    return sauceAccount.showJobAsync(req.params.jobId)
+      .then(job => cleanupJob(job))
+      .then(job => {
+        return sauceAccount.showJobAssetsAsync(req.params.jobId).then(function(assets) {
+          return sauceAccount.createPublicLinkAsync(req.params.jobId).then(function(url) {
+            res.render('screenshots-dialog', {
+              assets: assets,
+              identity: req.identity,
+              job: job,
+              hostname: sauceAccount.options.hostname,
+              auth: url.replace(/.*auth=([a-zA-Z0-9]+)/, '$1')
+            });
+          });
         });
       });
-    });
   });
 
   // This is an example dialog controller that can be launched when clicking on the glance.
