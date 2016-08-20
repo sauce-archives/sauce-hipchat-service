@@ -206,7 +206,7 @@ module.exports = function (app, addon) {
     res.sendStatus(200);
   });
 
-  const messageUrlPattern = /https?:\/\/saucelabs.com\/beta\/tests\/([a-zA-Z0-9]{32})/;
+  const messageUrlPattern = /https?:\/\/(?:[a-zA-Z0-9_-]+\.dev\.saucelabs\.net|saucelabs\.com)(?:\/beta)?\/tests\/([a-zA-Z0-9]{32})/;
   router.post('/webhooks/saucelabs_url', addon.authenticate(), function (req, res) {
     const message = req.body.item.message.message;
     const results = messageUrlPattern.exec(message);
