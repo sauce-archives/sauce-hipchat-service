@@ -8,26 +8,33 @@ var moment = require('moment');
 var htmlEscape = require('escape-html');
 
 SauceLabs.prototype = promisify(SauceLabs.prototype);
-var sauceAccount = new SauceLabs({
+const sauceAccount = new SauceLabs({
   debug: 1,
   hostname: process.env.SAUCE_HOSTNAME,
   username: process.env.SAUCE_USERNAME,
   password: process.env.SAUCE_ACCESS_KEY
 });
 
-const cleanupJob = (job) => {
-  return Object.assign({}, job, {
-    creation_time: job.creation_time*1000,
-    end_time: job.end_time*1000
-  });
-};
-
-
 // This is the heart of your HipChat Connect add-on. For more information,
 // take a look at https://developer.atlassian.com/hipchat/tutorials/getting-started-with-atlassian-connect-express-node-js
 module.exports = function (app, addon) {
   var hipchat = require('../lib/hipchat')(addon);
   app.use('/', router);
+
+  const getSauceAccount = (clientKey) => {
+    return addon.settings.get('sauceAccount', clientKey)
+      .then(accountInfo => {
+        if (!accountInfo) { throw new Error(); } // FIXME
+        return new SauceLabs(accountInfo)
+      });
+  }
+
+  const cleanupJob = (job) => {
+    return Object.assign({}, job, {
+      creation_time: job.creation_time*1000,
+      end_time: job.end_time*1000
+    });
+  };
 
   const getGlanceData = () => {
     return sauceAccount.getJobsAsync().then(jobs => {
@@ -99,6 +106,25 @@ module.exports = function (app, addon) {
       res.render('config', req.context);
     });
 
+  router.post('/config', addon.authenticate(), function (req, res) {
+    if (!req.body.username || !req.body.accesskey) {
+      res.status(400).send({ success: false, error: 'missing' });
+      return;
+    }
+
+    const data = { hostname: req.body.server, username: req.body.username, password: req.body.accesskey }
+    const sauceAccount = new SauceLabs(data);
+
+    sauceAccount.getAccountDetailsAsync().then(() => {
+      return addon.settings.set('sauceAccount', data, req.clientInfo.clientKey).then(() => {
+        res.json({ success: true });
+      })
+    }).catch(err => {
+      res.status(400).send({ success: false, error: err });
+      return;
+    });
+  });
+
   // This is an example glance that shows in the sidebar
   // https://developer.atlassian.com/hipchat/guide/glances
   router.get('/glance', cors(), addon.authenticate(), function (req, res) {
@@ -108,12 +134,16 @@ module.exports = function (app, addon) {
   // This is an example sidebar controller that can be launched when clicking on the glance.
   // https://developer.atlassian.com/hipchat/guide/dialog-and-sidebar-views/sidebar
   router.get('/sidebar', addon.authenticate(), function (req, res) {
-    return sauceAccount.getJobsAsync().then(function(jobs) {
-      res.render('sidebar-jobs', {
-        hostname: sauceAccount.options.hostname,
-        identity: req.identity,
-        jobs: jobs.map(job => cleanupJob(job))
+    return getSauceAccount(req.clientInfo.clientKey).then(sauceAccount => {
+      return sauceAccount.getJobsAsync().then(jobs => {
+        return res.render('sidebar-jobs', {
+          hostname: sauceAccount.options.hostname,
+          identity: req.identity,
+          jobs: jobs.map(job => cleanupJob(job))
+        });
       });
+    }).catch(() => {
+      return res.render('signin');
     });
   });
 

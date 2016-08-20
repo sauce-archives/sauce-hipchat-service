@@ -1,75 +1,33 @@
+/* global HipChat, $, AP */
 /* add-on script */
 
 $(document).ready(function () {
-
-  // The following functions use the HipChat Javascript API
-  // https://developer.atlassian.com/hipchat/guide/javascript-api
-
-  //To send a message to the HipChat room, you need to send a request to the add-on back-end
-  function sayHello(callback) {
-    //Ask HipChat for a JWT token
-    HipChat.auth.withToken(function (err, token) {
-      if (!err) {
-        //Then, make an AJAX call to the add-on backend, including the JWT token
-        //Server-side, the JWT token is validated using the middleware function addon.authenticate()
-        $.ajax(
-            {
-              type: 'POST',
-              url: '/send_notification',
-              headers: {'Authorization': 'JWT ' + token},
-              dataType: 'json',
-              data: {messageTitle: 'Hello World!'},
-              success: function () {
-                callback(false);
-              },
-              error: function () {
-                callback(true);
-              }
-            });
-      }
-    });
-  }
-
-  /* Functions used by sidebar.hbs */
-
-  $('#say_hello').on('click', function () {
-    sayHello(function (error) {
-      if (error)
-        console.log('Could not send message');
-    });
-  });
-
-  $('#show-room-details').on('click', function (e) {
-    HipChat.room.getRoomDetails(function (err, data) {
-      if (!err) {
-        $('#more-room-details-title').html('More details');
-        $('#more-room-details-body').html(JSON.stringify(data, null, 2));
-      }
-    });
+  
+  $('#signin').submit(function(e) {
     e.preventDefault();
-  });
-
-  $('#show-room-participants').on('click', function (e) {
-    HipChat.room.getParticipants(function (err, data) {
-      if (!err) {
-        $('#room-participants-title').html('Room participants');
-        $('#room-participants-details').html(JSON.stringify(data, null, 2));
-      }
+    HipChat.auth.withToken(function(err, token) {
+      if (err) { alert('FIXME - error getting token'); return; }
+      $.ajax({
+        type: 'POST',
+        url: '/config',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          username: $('#username').val(),
+          accesskey: $('#accesskey').val(),
+          server: $('#server').val()
+        }),
+        headers: { 'Authorization': 'JWT ' + token },
+      }).then(function() {
+        AP.require('sidebar', function(sidebar) {
+          sidebar.openView({ key: 'sidebar.joblist' });
+        });
+      }).fail(function(err) {
+        console.log('err', err);
+        // FIXME - do something like add has-error class to wrappers
+      });
     });
-    e.preventDefault();
   });
-
-  $('#show-user-details').on('click', function (e) {
-
-    HipChat.user.getCurrentUser(function (err, data) {
-      if (!err) {
-        $('#more-user-details-title').html('User details');
-        $('#more-user-details-body').html(JSON.stringify(data, null, 2));
-      }
-    });
-    e.preventDefault();
-  });
-
 
   /* Functions used by dialog.hbs */
 
