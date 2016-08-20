@@ -8,12 +8,6 @@ var moment = require('moment');
 var htmlEscape = require('escape-html');
 
 SauceLabs.prototype = promisify(SauceLabs.prototype);
-const sauceAccount = new SauceLabs({
-  debug: 1,
-  hostname: process.env.SAUCE_HOSTNAME,
-  username: process.env.SAUCE_USERNAME,
-  password: process.env.SAUCE_ACCESS_KEY
-});
 
 // This is the heart of your HipChat Connect add-on. For more information,
 // take a look at https://developer.atlassian.com/hipchat/tutorials/getting-started-with-atlassian-connect-express-node-js
@@ -36,26 +30,29 @@ module.exports = function (app, addon) {
     });
   };
 
-  const getGlanceData = () => {
-    return sauceAccount.getJobsAsync().then(jobs => {
-      let data = {
-        count: jobs.length,
-        statuses: jobs.reduce(function(statusCount, job) {
-          if (!statusCount[job.consolidated_status]) { statusCount[job.consolidated_status] = 0; }
-          statusCount[job.consolidated_status]++;
-          return statusCount;
-        }, {})
-      };
-      let ret = { 'label': { 'type': 'html', 'value': 'Sauce Labs' }, };
-      if (data.statuses.new) {
-        ret.status = {
-          'type': 'lozenge',
-          'value': { 'label': data.statuses.new + ' NEW', 'type': 'error' }
-        };
-      }
-      console.log(data, ret);
-      return ret;
-    });
+  const getGlanceData = (clientKey) => {
+    return getSauceAccount(clientKey)
+      .then(sauceAccount => {
+        return sauceAccount.getJobsAsync().then(jobs => {
+          let data = {
+            count: jobs.length,
+            statuses: jobs.reduce(function(statusCount, job) {
+              if (!statusCount[job.consolidated_status]) { statusCount[job.consolidated_status] = 0; }
+              statusCount[job.consolidated_status]++;
+              return statusCount;
+            }, {})
+          };
+          let ret = { 'label': { 'type': 'html', 'value': 'Sauce Labs' }, };
+          if (data.statuses.new) {
+            ret.status = {
+              'type': 'lozenge',
+              'value': { 'label': data.statuses.new + ' NEW', 'type': 'error' }
+            };
+          }
+          console.log(data, ret);
+          return ret;
+        });
+      });
   }
 
   // simple healthcheck
@@ -134,7 +131,7 @@ module.exports = function (app, addon) {
   // This is an example glance that shows in the sidebar
   // https://developer.atlassian.com/hipchat/guide/glances
   router.get('/glance', cors(), addon.authenticate(), function (req, res) {
-    getGlanceData().then(data => res.json(data));
+    getGlanceData(req.clientInfo.clientKey).then(data => res.json(data));
   });
 
   // This is an example sidebar controller that can be launched when clicking on the glance.
@@ -154,15 +151,18 @@ module.exports = function (app, addon) {
   });
 
   const _embed_dialog = (req, res, type) => {
-    return sauceAccount.createPublicLinkAsync(req.params.jobId).then(function(url) {
-      res.render(`embed-dialog`, {
-        type: type,
-        identity: req.identity,
-        jobId: req.params.jobId,
-        hostname: sauceAccount.options.hostname,
-        auth: url.replace(/.*auth=([a-zA-Z0-9]+)/, '$1')
+    return getSauceAccount(req.clientInfo.clientKey)
+      .then(sauceAccount => {
+        return sauceAccount.createPublicLinkAsync(req.params.jobId).then(function(url) {
+          res.render(`embed-dialog`, {
+            type: type,
+            identity: req.identity,
+            jobId: req.params.jobId,
+            hostname: sauceAccount.options.hostname,
+            auth: url.replace(/.*auth=([a-zA-Z0-9]+)/, '$1')
+          });
+        });
       });
-    });
   };
   router.get('/dialog/job/:jobId', addon.authenticate(), function (req, res) {
     return _embed_dialog(req, res, 'job');
@@ -172,20 +172,23 @@ module.exports = function (app, addon) {
   });
 
   router.get('/dialog/screenshots/:jobId', addon.authenticate(), function (req, res) {
-    return sauceAccount.showJobAsync(req.params.jobId)
-      .then(job => cleanupJob(job))
-      .then(job => {
-        return sauceAccount.showJobAssetsAsync(req.params.jobId).then(function(assets) {
-          return sauceAccount.createPublicLinkAsync(req.params.jobId).then(function(url) {
-            res.render('screenshots-dialog', {
-              assets: assets,
-              identity: req.identity,
-              job: job,
-              hostname: sauceAccount.options.hostname,
-              auth: url.replace(/.*auth=([a-zA-Z0-9]+)/, '$1')
+    return getSauceAccount(req.clientInfo.clientKey)
+      .then(sauceAccount => {
+        return sauceAccount.showJobAsync(req.params.jobId)
+          .then(job => cleanupJob(job))
+          .then(job => {
+            return sauceAccount.showJobAssetsAsync(req.params.jobId).then(function(assets) {
+              return sauceAccount.createPublicLinkAsync(req.params.jobId).then(function(url) {
+                res.render('screenshots-dialog', {
+                  assets: assets,
+                  identity: req.identity,
+                  job: job,
+                  hostname: sauceAccount.options.hostname,
+                  auth: url.replace(/.*auth=([a-zA-Z0-9]+)/, '$1')
+                });
+              });
             });
           });
-        });
       });
   });
 
@@ -198,7 +201,7 @@ module.exports = function (app, addon) {
   });
 
   router.post('/webhooks/sauce', addon.authenticate(), function(req, res) {
-    getGlanceData().then(data => hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'sample.glance', data));
+    getGlanceData(req.clientInfo.clientKey).then(data => hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'sample.glance', data));
     hipchat.sendMessage(req.clientInfo, req.identity.roomId, 'Updating glance')
     res.sendStatus(200);
   });
@@ -224,46 +227,49 @@ module.exports = function (app, addon) {
 
     // console.log('req.clientInfo', req.clientInfo);
     // console.log('req.identity', req.clientInfo);
-    return sauceAccount.showJobAsync(id)
-      .then(job => cleanupJob(job))
-      .then(job => {
-        return sauceAccount.showJobAssetsAsync(id).then(function(assets) {
-          var card = {
-            'style': 'application',
-            'id': uuid.v4(),
-            'metadata': { 'sauceJobId': id },
-            'format': 'medium',
-            'url': `https://${sauceAccount.options.hostname}/beta/tests/${id}`,
-            'title': job.name,
-            'description': {
-              'format': 'html',
-              'value': "<a href='#' data-target='job.video.dialog' data-target-options='" + htmlEscape(JSON.stringify({
-                urlTemplateValues: { 'jobId': job.id }
-              })) + "'>Video</a>"
-            },
-            'icon': { 'url': 'https://hipchat-public-m5.atlassian.com/assets/img/hipchat/bookmark-icons/favicon-192x192.png' },
-            'attributes': [
-              { label: 'Owner', value: { label: job.owner } },
-              { label: 'Status', value: { label: job.consolidated_status } },
-              { label: 'Platform', value: { label: `${job.os} ${job.browser} ${job.browser_version}` } },
-              { label: 'Start Time', value: { label: moment(job.creation_time).format("lll") } },
-              { label: 'End Time', value: { label: moment(job.end_time).format("lll") } },
-              { label: 'Duration', value: { label: moment.duration(moment(job.end_time).diff(moment(job.creation_time))).humanize() } },
-              { label: 'Has Screenshot(s)?', value: { label: assets.screenshots.length ? "yes" : "no" } },
-              { label: 'Has Video?', value: { label: assets.video ? "yes" : "no" } }
-            ]
-          };
+    return getSauceAccount(req.clientInfo.clientKey)
+      .then(sauceAccount => {
+        return sauceAccount.showJobAsync(id)
+          .then(job => cleanupJob(job))
+          .then(job => {
+            return sauceAccount.showJobAssetsAsync(id).then(function(assets) {
+              var card = {
+                'style': 'application',
+                'id': uuid.v4(),
+                'metadata': { 'sauceJobId': id },
+                'format': 'medium',
+                'url': `https://${sauceAccount.options.hostname}/beta/tests/${id}`,
+                'title': job.name,
+                'description': {
+                  'format': 'html',
+                  'value': "<a href='#' data-target='job.video.dialog' data-target-options='" + htmlEscape(JSON.stringify({
+                    urlTemplateValues: { 'jobId': job.id }
+                  })) + "'>Video</a>"
+                },
+                'icon': { 'url': 'https://hipchat-public-m5.atlassian.com/assets/img/hipchat/bookmark-icons/favicon-192x192.png' },
+                'attributes': [
+                  { label: 'Owner', value: { label: job.owner } },
+                  { label: 'Status', value: { label: job.consolidated_status } },
+                  { label: 'Platform', value: { label: `${job.os} ${job.browser} ${job.browser_version}` } },
+                  { label: 'Start Time', value: { label: moment(job.creation_time).format("lll") } },
+                  { label: 'End Time', value: { label: moment(job.end_time).format("lll") } },
+                  { label: 'Duration', value: { label: moment.duration(moment(job.end_time).diff(moment(job.creation_time))).humanize() } },
+                  { label: 'Has Screenshot(s)?', value: { label: assets.screenshots.length ? "yes" : "no" } },
+                  { label: 'Has Video?', value: { label: assets.video ? "yes" : "no" } }
+                ]
+              };
 
-          var msg = '<b>' + card.title + '</b>: ' + card.description.value;
-          var opts = {
-            'options': {
-              'message_format': 'html',
-              'color': jobColorStatus[job.consolidated_status] || 'gray',
-              'message': card.description.value
-            }
-          };
-          console.log('card', card);
-          return hipchat.sendMessage(req.clientInfo, req.identity.roomId, msg, opts, card);
+              var msg = '<b>' + card.title + '</b>: ' + card.description.value;
+              var opts = {
+                'options': {
+                  'message_format': 'html',
+                  'color': jobColorStatus[job.consolidated_status] || 'gray',
+                  'message': card.description.value
+                }
+              };
+              console.log('card', card);
+              return hipchat.sendMessage(req.clientInfo, req.identity.roomId, msg, opts, card);
+            });
         });
       });
   });
@@ -290,10 +296,10 @@ module.exports = function (app, addon) {
   const updateAllGlances = () => {
     addon.settings.client.keys('*:clientInfo', function (err, keys) {
       keys.forEach(clientInfoStr => {
-        let [clientId] = clientInfoStr.split(':');
-        console.log('a', clientId);
-        addon.loadClientInfo(clientId).then(clientInfo => {
-          return getGlanceData()
+        let [clientKey] = clientInfoStr.split(':');
+        console.log('a', clientKey);
+        addon.loadClientInfo(clientKey).then(clientInfo => {
+          return getGlanceData(clientKey)
             .then(data => hipchat.updateGlance(clientInfo, { groupId: clientInfo.groupId }, 'sample.glance', data));
         });
       });
