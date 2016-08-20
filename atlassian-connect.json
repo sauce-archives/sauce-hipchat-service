@@ -120,14 +120,6 @@
     ],
     "action": [
       {
-        "key": "sample.action",
-        "name": {
-          "value": "Open Hello Dialog!"
-        },
-        "target": "sample.dialog",
-        "location": "hipchat.input.action"
-      },
-      {
         "key": "action.saucelabs.job-details",
     		"name": { "value": "Open job details" },
     		"target": "job.details.dialog-meta",
