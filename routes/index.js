@@ -18,7 +18,9 @@ module.exports = function (app, addon) {
   const getSauceAccount = (clientKey) => {
     return addon.settings.get('sauceAccount', clientKey)
       .then(accountInfo => {
-        if (!accountInfo) { throw new Error(); } // FIXME
+        if (!accountInfo) {
+          throw new Error(`${clientKey} is not logged in`);
+        }
         return new SauceLabs(accountInfo)
       });
   }
@@ -46,12 +48,20 @@ module.exports = function (app, addon) {
           if (data.statuses.new) {
             ret.status = {
               'type': 'lozenge',
-              'value': { 'label': data.statuses.new + ' NEW', 'type': 'error' }
+              'value': { 'label': data.statuses.new + ' NEW', 'type': 'new' }
             };
           }
-          console.log(data, ret);
           return ret;
         });
+      })
+      .catch(() => {
+        return {
+          label: { 'type': 'html', 'value': 'Sauce Labs' },
+          status: {
+            'type': 'lozenge',
+            'value': { 'label': 'Needs Login', 'type': 'error' }
+          }
+        };
       });
   }
 
@@ -89,18 +99,8 @@ module.exports = function (app, addon) {
     }
     );
 
-  // This is an example route that's used by the default for the configuration page
-  // https://developer.atlassian.com/hipchat/guide/configuration-page
-  router.get('/config',
-    // Authenticates the request using the JWT token in the request
-    addon.authenticate(),
-    function (req, res) {
-      // The `addon.authenticate()` middleware populates the following:
-      // * req.clientInfo: useful information about the add-on client such as the
-      //   clientKey, oauth info, and HipChat account info
-      // * req.context: contains the context data accompanying the request like
-      //   the roomId
-      res.render('config', req.context);
+  router.get('/config', addon.authenticate(), function (req, res) {
+      res.render('signin', { sidebar: false });
     });
 
   router.post('/config', addon.authenticate(), function (req, res) {
@@ -114,6 +114,7 @@ module.exports = function (app, addon) {
 
     sauceAccount.getAccountDetailsAsync().then(() => {
       return addon.settings.set('sauceAccount', data, req.clientInfo.clientKey).then(() => {
+        getGlanceData(req.clientInfo.clientKey).then(data => hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'sample.glance', data));
         res.json({ success: true });
       })
     }).catch(err => {
@@ -124,6 +125,7 @@ module.exports = function (app, addon) {
 
   router.delete('/config', addon.authenticate(), function (req, res) {
     return addon.settings.del('sauceAccount', req.clientInfo.clientKey).then(() => {
+      getGlanceData(req.clientInfo.clientKey).then(data => hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'sample.glance', data));
       res.json({ success: true });
     })
   });
@@ -146,7 +148,7 @@ module.exports = function (app, addon) {
         });
       });
     }).catch(() => {
-      return res.render('signin');
+      return res.render('signin', { sidebar: true });
     });
   });
 
@@ -233,6 +235,16 @@ module.exports = function (app, addon) {
           .then(job => cleanupJob(job))
           .then(job => {
             return sauceAccount.showJobAssetsAsync(id).then(function(assets) {
+              const attributes = [
+                { label: 'Owner', value: { label: job.owner } },
+                { label: 'Status', value: { label: job.consolidated_status } },
+                { label: 'Platform', value: { label: `${job.os} ${job.browser} ${job.browser_version}` } },
+                { label: 'Start Time', value: { label: moment(job.creation_time).format("lll") } },
+                { label: 'End Time', value: { label: moment(job.end_time).format("lll") } },
+                { label: 'Duration', value: { label: moment.duration(moment(job.end_time).diff(moment(job.creation_time))).humanize() } },
+                { label: 'Has Screenshot(s)?', value: { label: assets.screenshots.length ? "yes" : "no" } },
+                { label: 'Has Video?', value: { label: assets.video ? "yes" : "no" } }
+              ];
               var card = {
                 'style': 'application',
                 'id': uuid.v4(),
@@ -247,16 +259,7 @@ module.exports = function (app, addon) {
                   })) + "'>Video</a>"
                 },
                 'icon': { 'url': 'https://hipchat-public-m5.atlassian.com/assets/img/hipchat/bookmark-icons/favicon-192x192.png' },
-                'attributes': [
-                  { label: 'Owner', value: { label: job.owner } },
-                  { label: 'Status', value: { label: job.consolidated_status } },
-                  { label: 'Platform', value: { label: `${job.os} ${job.browser} ${job.browser_version}` } },
-                  { label: 'Start Time', value: { label: moment(job.creation_time).format("lll") } },
-                  { label: 'End Time', value: { label: moment(job.end_time).format("lll") } },
-                  { label: 'Duration', value: { label: moment.duration(moment(job.end_time).diff(moment(job.creation_time))).humanize() } },
-                  { label: 'Has Screenshot(s)?', value: { label: assets.screenshots.length ? "yes" : "no" } },
-                  { label: 'Has Video?', value: { label: assets.video ? "yes" : "no" } }
-                ]
+                'attributes': attributes
               };
 
               var msg = '<b>' + card.title + '</b>: ' + card.description.value;
@@ -271,6 +274,9 @@ module.exports = function (app, addon) {
               return hipchat.sendMessage(req.clientInfo, req.identity.roomId, msg, opts, card);
             });
         });
+      }).catch(err => {
+        console.log('err', err);
+        console.trace('unable to parse');
       });
   });
 
