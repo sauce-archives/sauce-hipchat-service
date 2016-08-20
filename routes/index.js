@@ -125,6 +125,12 @@ module.exports = function (app, addon) {
     });
   });
 
+  router.delete('/config', addon.authenticate(), function (req, res) {
+    return addon.settings.del('sauceAccount', req.clientInfo.clientKey).then(() => {
+      res.json({ success: true });
+    })
+  });
+
   // This is an example glance that shows in the sidebar
   // https://developer.atlassian.com/hipchat/guide/glances
   router.get('/glance', cors(), addon.authenticate(), function (req, res) {
