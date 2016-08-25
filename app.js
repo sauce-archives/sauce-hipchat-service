@@ -46,8 +46,6 @@ var hipchat = require('atlassian-connect-express-hipchat')(addon, app);
 // The following settings applies to all environments
 app.set('port', port);
 
-// Configure react view engine
-// app.engine('jsx', require('express-react-views').createEngine());
 
 // Configure the Handlebars view engine
 app.engine('hbs', hbs.express3({partialsDir: viewsDir}));
@@ -86,13 +84,6 @@ hbs.registerHelper('concat', function() {
   var arg = Array.prototype.slice.call(arguments,0);
   arg.pop();
   return arg.join('');
-});
-hbs.registerHelper('if_equals', function(conditional, value, options) {
-  if (conditional === value){
-    return options.fn(this);
-  } else {
-    return options.inverse(this);
-  }
 });
 HandlebarsIntl.registerWith(hbs);
 
