@@ -6,8 +6,12 @@
     "node": "v6.4.0"
   },
   "scripts": {
+    "docker:build": "docker build -t gcr.io/my-kubernetes-1269/sauce-hipchat-service:v$(node -e \"console.log(require('./package.json').version)\") .",
+    "docker:push": "gcloud docker push gcr.io/my-kubernetes-1269/sauce-hipchat-service:v$(node -e \"console.log(require('./package.json').version)\")",
+    "docker:deploy": "kubectl rolling-update app-controller --image=gcr.io/my-kubernetes-1269/sauce-hipchat-service:v$(node -e \"console.log(require('./package.json').version)\")",
     "build": "./bin/build.sh",
     "heroku-postbuild": "./bin/build.sh",
+    "dev": "nodemon app.js",
     "start": "node app.js"
   },
   "dependencies": {
@@ -25,7 +29,6 @@
     "express": "^4.14.0",
     "express-hbs": "^1.0.1",
     "express-promise-router": "^1.0.0",
-    "express-react-views": "^0.10.2",
     "handlebars-helper-svg": "^2.0.1",
     "handlebars-intl": "^1.1.2",
     "hbs-json": "^0.1.1",
@@ -59,7 +62,7 @@
     "file-loader": "^0.9.0",
     "imports-loader": "^0.6.5",
     "node-sass": "^3.8.0",
-    "nodemon": "^1.10.0",
+    "nodemon": "^1.10.2",
     "postcss-loader": "^0.10.1",
     "sass": "^0.5.0",
     "sass-loader": "^4.0.0",

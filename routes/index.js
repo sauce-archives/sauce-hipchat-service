@@ -1,3 +1,4 @@
+/* eslint no-console: 0 */
 var cors = require('cors');
 var uuid = require('uuid');
 var url = require('url');
@@ -112,13 +113,14 @@ module.exports = function (app, addon) {
     const data = { hostname: req.body.server, username: req.body.username, password: req.body.accesskey }
     const sauceAccount = new SauceLabs(data);
 
-    sauceAccount.getAccountDetailsAsync().then(() => {
+    return sauceAccount.getAccountDetailsAsync().then(() => {
       return addon.settings.set('sauceAccount', data, req.clientInfo.clientKey).then(() => {
         getGlanceData(req.clientInfo.clientKey).then(data => hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'sample.glance', data));
         res.json({ success: true });
       })
     }).catch(err => {
-      res.status(400).send({ success: false, error: err });
+      console.log('err', err.body || err);
+      res.status(400).send({ success: false, error: err.message });
       return;
     });
   });
@@ -227,8 +229,6 @@ module.exports = function (app, addon) {
       // in progress|running
     };
 
-    // console.log('req.clientInfo', req.clientInfo);
-    // console.log('req.identity', req.clientInfo);
     return getSauceAccount(req.clientInfo.clientKey)
       .then(sauceAccount => {
         return sauceAccount.showJobAsync(id)
@@ -239,11 +239,11 @@ module.exports = function (app, addon) {
                 { label: 'Owner', value: { label: job.owner } },
                 { label: 'Status', value: { label: job.consolidated_status } },
                 { label: 'Platform', value: { label: `${job.os} ${job.browser} ${job.browser_version}` } },
-                { label: 'Start Time', value: { label: moment(job.creation_time).format("lll") } },
-                { label: 'End Time', value: { label: moment(job.end_time).format("lll") } },
+                { label: 'Start', value: { label: moment(job.creation_time).format("lll") } },
+                { label: 'End', value: { label: moment(job.end_time).format("lll") } },
                 { label: 'Duration', value: { label: moment.duration(moment(job.end_time).diff(moment(job.creation_time))).humanize() } },
-                { label: 'Has Screenshot(s)?', value: { label: assets.screenshots.length ? "yes" : "no" } },
-                { label: 'Has Video?', value: { label: assets.video ? "yes" : "no" } }
+                { label: 'Screenshot', value: { label: assets.screenshots.length ? "yes" : "no" } },
+                { label: 'Video', value: { label: assets.video ? "yes" : "no" } }
               ];
               var card = {
                 'style': 'application',
@@ -284,8 +284,6 @@ module.exports = function (app, addon) {
   // Connect's install flow, check out:
   // https://developer.atlassian.com/hipchat/guide/installation-flow
   addon.on('installed', function (clientKey, clientInfo, req) {
-    console.log('clientKey', clientKey);
-    console.log('clientInfo', clientInfo);
     hipchat.sendMessage(clientInfo, req.body.roomId, 'The ' + addon.descriptor.name + ' add-on has been installed in this room');
   });
 
@@ -303,7 +301,6 @@ module.exports = function (app, addon) {
     addon.settings.client.keys('*:clientInfo', function (err, keys) {
       keys.forEach(clientInfoStr => {
         let [clientKey] = clientInfoStr.split(':');
-        console.log('a', clientKey);
         addon.loadClientInfo(clientKey).then(clientInfo => {
           return getGlanceData(clientKey)
             .then(data => hipchat.updateGlance(clientInfo, { groupId: clientInfo.groupId }, 'sample.glance', data));
