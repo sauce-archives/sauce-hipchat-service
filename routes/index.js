@@ -6,7 +6,6 @@ var router = require('express-promise-router')();
 var promisify = require('es6-promisify-all');
 var SauceLabs = require('saucelabs');
 var moment = require('moment');
-var htmlEscape = require('escape-html');
 
 SauceLabs.prototype = promisify(SauceLabs.prototype);
 
@@ -235,49 +234,53 @@ module.exports = function (app, addon) {
           .then(job => cleanupJob(job))
           .then(job => {
             return sauceAccount.showJobAssetsAsync(id).then(function(assets) {
-              const attributes = [
-                { label: 'Owner', value: { label: job.owner } },
-                { label: 'Status', value: { label: job.consolidated_status } },
-                { label: 'Platform', value: { label: `${job.os} ${job.browser} ${job.browser_version}` } },
-                { label: 'Start', value: { label: moment(job.creation_time).format("lll") } },
-                { label: 'End', value: { label: moment(job.end_time).format("lll") } },
-                { label: 'Duration', value: { label: moment.duration(moment(job.end_time).diff(moment(job.creation_time))).humanize() } },
-                { label: 'Screenshot', value: { label: assets.screenshots.length ? "yes" : "no" } },
-                { label: 'Video', value: { label: assets.video ? "yes" : "no" } }
-              ];
-              var card = {
-                'style': 'application',
-                'id': uuid.v4(),
-                'metadata': { 'sauceJobId': id },
-                'format': 'medium',
-                'url': `https://${sauceAccount.options.hostname}/beta/tests/${id}`,
-                'title': job.name,
-                'description': {
-                  'format': 'html',
-                  'value': "<a href='#' data-target='job.video.dialog' data-target-options='" + htmlEscape(JSON.stringify({
-                    urlTemplateValues: { 'jobId': job.id }
-                  })) + "'>Video</a>"
-                },
-                'icon': { 'url': 'https://hipchat-public-m5.atlassian.com/assets/img/hipchat/bookmark-icons/favicon-192x192.png' },
-                'attributes': attributes
-              };
+              return sauceAccount.createPublicLinkAsync(id).then(function(publicUrl) {
 
-              var msg = '<b>' + card.title + '</b>: ' + card.description.value;
-              var opts = {
-                'options': {
-                  'message_format': 'html',
-                  'color': jobColorStatus[job.consolidated_status] || 'gray',
-                  'message': card.description.value
+                const attributes = [
+                  { label: 'Owner', value: { label: job.owner } },
+                  { label: 'Status', value: { label: job.consolidated_status } },
+                  { label: 'Platform', value: { label: `${job.os} ${job.browser} ${job.browser_version}` } },
+                  { label: 'Start', value: { label: moment(job.creation_time).format("lll") } },
+                  { label: 'End', value: { label: moment(job.end_time).format("lll") } },
+                  { label: 'Duration', value: { label: moment.duration(moment(job.end_time).diff(moment(job.creation_time))).humanize() } },
+                  { label: 'Screenshot', value: { label: assets.screenshots.length ? "yes" : "no" } },
+                  { label: 'Video', value: { label: assets.video ? "yes" : "no" } }
+                ];
+                var card = {
+                  'style': 'application',
+                  'id': uuid.v4(),
+                  'metadata': { 'sauceJobId': id },
+                  'format': 'medium',
+                  'url': `https://${sauceAccount.options.hostname}/beta/tests/${id}`,
+                  'title': job.name,
+                  'attributes': attributes
+                };
+
+                if (assets.screenshots) { 
+                  const image = assets.screenshots[assets.screenshots.length-1];
+                  const auth = publicUrl.replace(/.*auth=([a-zA-Z0-9]+)/, '$1') ;
+                  card.thumbnail = { 
+                    url: `https://${sauceAccount.options.hostname}/rest/v1/${job.owner}/jobs/${job.id}/assets/${image}?auth=${auth}`
+                  };
                 }
-              };
-              console.log('card', card);
-              return hipchat.sendMessage(req.clientInfo, req.identity.roomId, msg, opts, card);
+                var msg = `<b>${card.title}</b>: <a href="${publicUrl}">Job Info</a>`;
+                var opts = {
+                  'options': {
+                    'message_format': 'html',
+                    'color': jobColorStatus[job.consolidated_status] || 'gray',
+                    'message': msg
+                  }
+                };
+                console.log('card', card);
+                return hipchat.sendMessage(req.clientInfo, req.identity.roomId, msg, opts, card);
+              });
             });
         });
       }).catch(err => {
         console.log('err', err);
         console.trace('unable to parse');
-      });
+        hipchat.sendMessage(req.clientInfo, req.identity.roomId, `Unable to process url: ${err}`);
+      }).then(() => res.json({}));
   });
 
   // Notify the room that the add-on was installed. To learn more about
