@@ -7,6 +7,14 @@ var promisify = require('es6-promisify-all');
 var SauceLabs = require('saucelabs');
 var moment = require('moment');
 
+SauceLabs.prototype.getBuild = function (name, callback) {
+  this.send({
+    method: 'GET',
+    path: ':username/builds/:name',
+    args: { name: name }
+  }, callback);
+};
+
 SauceLabs.prototype = promisify(SauceLabs.prototype);
 
 // This is the heart of your HipChat Connect add-on. For more information,
@@ -32,9 +40,19 @@ module.exports = function (app, addon) {
     });
   };
 
+  const addBuildInfo = (sauceAccount, job) => {
+    if (!job.build) { return job; }
+    return sauceAccount.getBuildAsync(job.build).then(build => {
+      job.build_id = build.id
+      return job;
+    });
+  };
+
   const getGlanceData = (clientKey) => {
-    return getSauceAccount(clientKey)
-      .then(sauceAccount => {
+    return getSauceAccount(clientKey).then(() => {
+        let ret = { 'label': { 'type': 'html', 'value': 'Sauce Labs' }, };
+        return ret;
+          /*
         return sauceAccount.getJobsAsync().then(jobs => {
           let data = {
             count: jobs.length,
@@ -44,7 +62,6 @@ module.exports = function (app, addon) {
               return statusCount;
             }, {})
           };
-          let ret = { 'label': { 'type': 'html', 'value': 'Sauce Labs' }, };
           if (data.statuses.new) {
             ret.status = {
               'type': 'lozenge',
@@ -53,6 +70,7 @@ module.exports = function (app, addon) {
           }
           return ret;
         });
+          */
       })
       .catch(() => {
         return {
@@ -232,9 +250,11 @@ module.exports = function (app, addon) {
       .then(sauceAccount => {
         return sauceAccount.showJobAsync(id)
           .then(job => cleanupJob(job))
+          .then(job => addBuildInfo(sauceAccount, job))
           .then(job => {
             return sauceAccount.showJobAssetsAsync(id).then(function(assets) {
               return sauceAccount.createPublicLinkAsync(id).then(function(publicUrl) {
+                const auth = publicUrl.replace(/.*auth=([a-zA-Z0-9]+)/, '$1') ;
 
                 const attributes = [
                   { label: 'Owner', value: { label: job.owner } },
@@ -242,28 +262,43 @@ module.exports = function (app, addon) {
                   { label: 'Platform', value: { label: `${job.os} ${job.browser} ${job.browser_version}` } },
                   { label: 'Start', value: { label: moment(job.creation_time).format("lll") } },
                   { label: 'End', value: { label: moment(job.end_time).format("lll") } },
-                  { label: 'Duration', value: { label: moment.duration(moment(job.end_time).diff(moment(job.creation_time))).humanize() } },
-                  { label: 'Screenshot', value: { label: assets.screenshots.length ? "yes" : "no" } },
-                  { label: 'Video', value: { label: assets.video ? "yes" : "no" } }
+                  { label: 'Duration', value: { label: moment.duration(moment(job.end_time).diff(moment(job.creation_time))).humanize() } }
                 ];
                 var card = {
                   'style': 'application',
                   'id': uuid.v4(),
                   'metadata': { 'sauceJobId': id },
                   'format': 'medium',
-                  'url': `https://${sauceAccount.options.hostname}/beta/tests/${id}`,
+                  'url': `https://${sauceAccount.options.hostname}/beta/tests/${id}?auth=${auth}`,
                   'title': job.name,
                   'attributes': attributes
                 };
 
+                if (job.error) {
+                  card.description = {
+                    format: 'html',
+                    value: `<b>Error</b>: ${job.error}`
+                  }
+                }
+                if (job.build_id) {
+                  attributes.push({
+                    label: 'Build',
+                    value: {
+                      url: `https://${sauceAccount.options.hostname}/beta/builds/${job.build_id}?auth=${auth}`,
+                      label: job.build
+                    }
+                  });
+                }
+
                 if (assets.screenshots) { 
                   const image = assets.screenshots[assets.screenshots.length-1];
-                  const auth = publicUrl.replace(/.*auth=([a-zA-Z0-9]+)/, '$1') ;
                   card.thumbnail = { 
                     url: `https://${sauceAccount.options.hostname}/rest/v1/${job.owner}/jobs/${job.id}/assets/${image}?auth=${auth}`
                   };
                 }
                 var msg = `<b>${card.title}</b>: <a href="${publicUrl}">Job Info</a>`;
+                if (card.description) { msg = msg + card.description.value; }
+
                 var opts = {
                   'options': {
                     'message_format': 'html',
