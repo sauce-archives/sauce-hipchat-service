@@ -127,7 +127,7 @@
         "conditions": [{
           "condition": "card_matches",
           "params": {
-            "sender": "Sauce Labs for HipChat"
+            "sender_addon_key": "sauce-hipchat-service"
           }
         }]
       },
@@ -139,7 +139,7 @@
         "conditions": [{
           "condition": "card_matches",
           "params": {
-            "sender": "Sauce Labs for HipChat"
+            "sender_addon_key": "sauce-hipchat-service"
           }
         }]
       },
