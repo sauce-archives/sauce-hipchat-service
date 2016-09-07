@@ -7,20 +7,19 @@ var promisify = require('es6-promisify-all');
 var SauceLabs = require('saucelabs');
 var moment = require('moment');
 
-SauceLabs.prototype.getBuild = function (name, callback) {
+SauceLabs.prototype.showJob = function (id, callback) {
   this.send({
     method: 'GET',
-    path: ':username/builds/:name',
-    args: { name: name }
+    path: 'jobs/:id',
+    args: { id: id }
   }, callback);
 };
 
 SauceLabs.prototype.getBuild = function (name, callback) {
-  console.log(arguments);
   this.send({
     method: 'GET',
     path: ':username/builds/:name',
-    args: { name: encodeURIComponent(name) }
+    args: { username: username, name: encodeURIComponent(name) }
   }, callback);
 };
 SauceLabs.prototype = promisify(SauceLabs.prototype);
@@ -50,10 +49,10 @@ module.exports = function (app, addon) {
 
   const addBuildInfo = (sauceAccount, job) => {
     if (!job.build) { return job; }
-    return sauceAccount.getBuildAsync(job.build).then(build => {
+    return sauceAccount.getBuildAsync(job.build, job.owner).then(build => {
       job.build_id = build.id
       return job;
-    });
+    }).catch(() => job);
   };
 
   const getGlanceData = (clientKey) => {
@@ -73,7 +72,7 @@ module.exports = function (app, addon) {
 
   // simple healthcheck
   router.get('/healthcheck', function (req, res) {
-    res.send('OK');
+    res.json({ status: 'OK', version: require('../package.json').version });
   });
 
   router.get('/', function (req, res) {
