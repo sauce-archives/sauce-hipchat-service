@@ -15,7 +15,7 @@ SauceLabs.prototype.showJob = function (id, callback) {
   }, callback);
 };
 
-SauceLabs.prototype.getBuild = function (name, callback) {
+SauceLabs.prototype.getBuild = function (name, username, callback) {
   this.send({
     method: 'GET',
     path: ':username/builds/:name',
@@ -279,14 +279,13 @@ module.exports = function (app, addon) {
                   from: from,
                   attach_to: req.body.item.message.mid
                 };
-                console.log('card', card);
                 return hipchat.sendMessage(req.clientInfo, req.identity.roomId, msg, opts, card);
               });
             });
         });
       }).catch(err => {
         console.log('err', err);
-        console.trace('unable to parse');
+        if (err.error) { err = err.error; }
         hipchat.sendMessage(req.clientInfo, req.identity.roomId, `Unable to process url: ${err}`);
       }).then(() => res.json({}));
   });
