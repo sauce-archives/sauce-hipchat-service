@@ -1,31 +1,3 @@
 {{!< layout}}
-
-<!-- the Javascript file js/addon.js is imported in the layout -->
-<!-- It contains functions which execute actions for buttons/links in this page -->
-
-<section class="aui-connect-page aui-connect-page-focused" role="main">
-  <section class="aui-connect-content">
-    <div class="aui-connect-content-inner">
-      <img src="/img/logo.png">
-      <h1>Get the most out of Sauce Labs</h1>
-      <p>Connect your account with Sauce Labs</p>
-      <form class="aui top-label" id="signin">
-        <div class="field-group">
-          <label for="username">Username</label>
-          <input class="text full-width-field" type="text" name="username" id="username" />
-        </div>
-        <div class="field-group">
-          <label for="accesskey">Access Key</label>
-          <input class="text full-width-field" type="text" name="accesskey" id="accesskey" />
-        </div>
-        <div class="field-group">
-          <label for="server">Server</label>
-          <input class="text full-width-field" type="text" name="server" id="server" value="saucelabs.com" />
-        </div>
-        <div class="aui-buttons">
-          <button type="submit" class="aui-button aui-button-primary" id="signin-button">Sign In</button>
-        </div>
-      </form>
-    </div>
-  </section>
-</section>
+<div id="config"></div>
+<script src="/js/bundle.js"></script>

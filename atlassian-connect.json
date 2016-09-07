@@ -13,8 +13,7 @@
   "capabilities": {
     "hipchatApiConsumer": {
       "scopes": [
-        "send_notification",
-        "view_room"
+        "send_notification"
       ],
       "avatar": {
         "url": "{{localBaseUrl}}/img/logo.png",
@@ -44,7 +43,7 @@
       {
         "name": { "value": "Sauce Labs" },
         "queryUrl": "{{localBaseUrl}}/glance",
-        "key": "sample.glance",
+        "key": "saucelabs.glance",
         "target": "sidebar.joblist",
         "icon": {
           "url": "{{localBaseUrl}}/img/logo.png",
@@ -69,7 +68,7 @@
         "url": "{{localBaseUrl}}/dialog/job/{jobId}",
         "options": {
           "style": "normal",
-          "size": { "width": "1024px", "height": "768px" }
+          "size": { "width": "1045px", "height": "775px" }
         }
       },
       {
@@ -78,7 +77,7 @@
         "url": "{{localBaseUrl}}/dialog/job/{message.metadata.sauceJobId}",
         "options": {
           "style": "normal",
-          "size": { "width": "1024px", "height": "768px" }
+          "size": { "width": "1045px", "height": "775px" }
         }
       },
       {
@@ -87,7 +86,7 @@
         "url": "{{localBaseUrl}}/dialog/video/{jobId}",
         "options": {
           "style": "normal",
-          "size": { "width": "1024px", "height": "768px" }
+          "size": { "width": "1045px", "height": "775px" }
         }
       },
       {
@@ -96,7 +95,7 @@
         "url": "{{localBaseUrl}}/dialog/video/{message.metadata.sauceJobId}",
         "options": {
           "style": "normal",
-          "size": { "width": "1024px", "height": "768px" }
+          "size": { "width": "1045px", "height": "775px" }
         }
       },
       {
@@ -105,7 +104,7 @@
         "url": "{{localBaseUrl}}/dialog/screenshots/{jobId}",
         "options": {
           "style": "normal",
-          "size": { "width": "1024px", "height": "768px" }
+          "size": { "width": "1045px", "height": "810px" }
         }
       },
       {
@@ -114,14 +113,14 @@
         "url": "{{localBaseUrl}}/dialog/screenshots/{message.metadata.sauceJobId}",
         "options": {
           "style": "normal",
-          "size": { "width": "1024px", "height": "768px" }
+          "size": { "width": "1045px", "height": "810px" }
         }
       }
     ],
     "action": [
       {
         "key": "action.saucelabs.job-details",
-    		"name": { "value": "Open job details" },
+    		"name": { "value": "Show job details" },
     		"target": "job.details.dialog-meta",
     		"location": "hipchat.message.action",
         "conditions": [{
