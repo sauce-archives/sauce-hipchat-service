@@ -11,7 +11,7 @@
     "docker:deploy": "kubectl rolling-update sauce-hipchat-ctrl --image=gcr.io/my-kubernetes-1269/sauce-hipchat-service:v$(node -e \"console.log(require('./package.json').version)\")",
     "build": "./bin/build.sh",
     "heroku-postbuild": "./bin/build.sh",
-    "dev": "nodemon app.js",
+    "dev": "nodemon -w app.js -w atlassian-connect.json -w config.json -w routes/index.js app.js",
     "start": "node app.js"
   },
   "dependencies": {
@@ -31,6 +31,7 @@
     "handlebars-helper-svg": "^2.0.1",
     "handlebars-intl": "^1.1.2",
     "hbs-json": "^0.1.1",
+    "isomorphic-fetch": "^2.2.1",
     "lodash": "^4.13.1",
     "moment": "^2.14.1",
     "morgan": "^1.7.0",

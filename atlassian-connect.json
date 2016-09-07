@@ -13,8 +13,7 @@
   "capabilities": {
     "hipchatApiConsumer": {
       "scopes": [
-        "send_notification",
-        "view_room"
+        "send_notification"
       ],
       "avatar": {
         "url": "{{localBaseUrl}}/img/logo.png",
@@ -44,7 +43,7 @@
       {
         "name": { "value": "Sauce Labs" },
         "queryUrl": "{{localBaseUrl}}/glance",
-        "key": "sample.glance",
+        "key": "saucelabs.glance",
         "target": "sidebar.joblist",
         "icon": {
           "url": "{{localBaseUrl}}/img/logo.png",

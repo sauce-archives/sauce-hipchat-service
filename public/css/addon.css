@@ -18,3 +18,65 @@
 .aui-connect-content:last-child {
   display: block;
 }
+
+.aui-message {
+    background: #fff;
+    border-top: 1px solid #3572b0;
+    border-right: 1px solid #3572b0;
+    border-bottom: 1px solid #3572b0;
+    border-left: 1px solid #3572b0;
+    border-radius: 3px;
+    color: #333;
+    line-height: 20px;
+    margin: 20px 0 0 0;
+    overflow-wrap: break-word;
+    padding-bottom: 20px;
+    padding-left: 60px;
+    padding-right: 40px;
+    padding-top: 20px;
+    position: relative;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.aui-message-error:after, .aui-message.error:after {
+    content: "\f15a";
+    color: #fff;
+}
+.aui-message:after {
+    color: #fff;
+    font-family: Atlassian Icons;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    font-style: normal;
+    font-weight: 400;
+    left: 12px;
+    line-height: 1;
+    margin-top: -8px;
+    position: absolute;
+    speak: none;
+    top: 50%;
+    content: "\f16f";
+  }
+
+.aui-message:before {
+    background-color: #3572b0;
+}
+.aui-message:before {
+    background-color: #3572b0;
+    bottom: 0;
+    content: '';
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 40px;
+  }
+
+.aui-message-error:before, .aui-message.error:before {
+    background-color: #d04437;
+}
+.aui-message-error, .aui-message.error {
+    background: #fff;
+    border-color: #d04437;
+    color: #333;
+}

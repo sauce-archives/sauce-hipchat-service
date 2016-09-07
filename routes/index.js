@@ -15,6 +15,14 @@ SauceLabs.prototype.getBuild = function (name, callback) {
   }, callback);
 };
 
+SauceLabs.prototype.getBuild = function (name, callback) {
+  console.log(arguments);
+  this.send({
+    method: 'GET',
+    path: ':username/builds/:name',
+    args: { name: encodeURIComponent(name) }
+  }, callback);
+};
 SauceLabs.prototype = promisify(SauceLabs.prototype);
 
 // This is the heart of your HipChat Connect add-on. For more information,
@@ -50,27 +58,7 @@ module.exports = function (app, addon) {
 
   const getGlanceData = (clientKey) => {
     return getSauceAccount(clientKey).then(() => {
-        let ret = { 'label': { 'type': 'html', 'value': 'Sauce Labs' }, };
-        return ret;
-          /*
-        return sauceAccount.getJobsAsync().then(jobs => {
-          let data = {
-            count: jobs.length,
-            statuses: jobs.reduce(function(statusCount, job) {
-              if (!statusCount[job.consolidated_status]) { statusCount[job.consolidated_status] = 0; }
-              statusCount[job.consolidated_status]++;
-              return statusCount;
-            }, {})
-          };
-          if (data.statuses.new) {
-            ret.status = {
-              'type': 'lozenge',
-              'value': { 'label': data.statuses.new + ' NEW', 'type': 'new' }
-            };
-          }
-          return ret;
-        });
-          */
+        return { 'label': { 'type': 'html', 'value': 'Sauce Labs' }, };
       })
       .catch(() => {
         return {
@@ -88,51 +76,35 @@ module.exports = function (app, addon) {
     res.send('OK');
   });
 
-  router.get('/gavin', function(req, res) {
-    addon.settings.client.keys('*:clientInfo', function (err, rep) {
-      res.json(rep);
-    });
-  });
-  // Root route. This route will serve the `addon.json` unless a homepage URL is
-  // specified in `addon.json`.
-  router.get('/',
-    function (req, res) {
-      // Use content-type negotiation to choose the best way to respond
-      res.format({
-        // If the request content-type is text-html, it will decide which to serve up
-        'text/html': function () {
-          var homepage = url.parse(addon.descriptor.links.homepage);
-          if (homepage.hostname === req.hostname && homepage.path === req.path) {
-            res.render('homepage', Object.assign({}, addon.descriptor, {_key: addon.descriptor.key}));
-          } else {
-            res.redirect(addon.descriptor.links.homepage);
-          }
-        },
-        // This logic is here to make sure that the `addon.json` is always
-        // served up when requested by the host
-        'application/json': function () {
-          res.redirect('/atlassian-connect.json');
-        }
-      });
+  router.get('/', function (req, res) {
+    const homepage = url.parse(addon.descriptor.links.homepage);
+    if (homepage.hostname === req.hostname && homepage.path === req.path) {
+      res.render('homepage', Object.assign({}, addon.descriptor, {_key: addon.descriptor.key}));
+    } else {
+      res.redirect(addon.descriptor.links.homepage);
     }
-    );
+  });
 
   router.get('/config', addon.authenticate(), function (req, res) {
+    return getSauceAccount(req.clientInfo.clientKey).then(sauceAccount => {
+      res.render('alreadyLoggedIn', { username: sauceAccount.username });
+    }).catch(() => {
       res.render('signin', { sidebar: false });
     });
+  });
 
   router.post('/config', addon.authenticate(), function (req, res) {
-    if (!req.body.username || !req.body.accesskey) {
+    if (!req.body.username || !req.body.accessKey) {
       res.status(400).send({ success: false, error: 'missing' });
       return;
     }
 
-    const data = { hostname: req.body.server, username: req.body.username, password: req.body.accesskey }
+    const data = { hostname: req.body.server, username: req.body.username, password: req.body.accessKey }
     const sauceAccount = new SauceLabs(data);
 
     return sauceAccount.getAccountDetailsAsync().then(() => {
       return addon.settings.set('sauceAccount', data, req.clientInfo.clientKey).then(() => {
-        getGlanceData(req.clientInfo.clientKey).then(data => hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'sample.glance', data));
+        getGlanceData(req.clientInfo.clientKey).then(data => hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'saucelabs.glance', data));
         res.json({ success: true });
       })
     }).catch(err => {
@@ -144,7 +116,7 @@ module.exports = function (app, addon) {
 
   router.delete('/config', addon.authenticate(), function (req, res) {
     return addon.settings.del('sauceAccount', req.clientInfo.clientKey).then(() => {
-      getGlanceData(req.clientInfo.clientKey).then(data => hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'sample.glance', data));
+      getGlanceData(req.clientInfo.clientKey).then(data => hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'saucelabs.glance', data));
       res.json({ success: true });
     })
   });
@@ -197,6 +169,7 @@ module.exports = function (app, addon) {
       .then(sauceAccount => {
         return sauceAccount.showJobAsync(req.params.jobId)
           .then(job => cleanupJob(job))
+          .then(job => addBuildInfo(sauceAccount, job))
           .then(job => {
             return sauceAccount.showJobAssetsAsync(req.params.jobId).then(function(assets) {
               return sauceAccount.createPublicLinkAsync(req.params.jobId).then(function(url) {
@@ -222,13 +195,14 @@ module.exports = function (app, addon) {
   });
 
   router.post('/webhooks/sauce', addon.authenticate(), function(req, res) {
-    getGlanceData(req.clientInfo.clientKey).then(data => hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'sample.glance', data));
+    getGlanceData(req.clientInfo.clientKey).then(data => hipchat.updateGlance(req.clientInfo, req.identity.roomId, 'saucelabs.glance', data));
     hipchat.sendMessage(req.clientInfo, req.identity.roomId, 'Updating glance')
     res.sendStatus(200);
   });
 
   const messageUrlPattern = /https?:\/\/(?:[a-zA-Z0-9_-]+\.dev\.saucelabs\.net|saucelabs\.com)(?:\/beta)?\/tests\/([a-zA-Z0-9]{32})/;
   router.post('/webhooks/saucelabs_url', addon.authenticate(), function (req, res) {
+    const from = req.body.from;
     const message = req.body.item.message.message;
     const results = messageUrlPattern.exec(message);
     const id = results[1];
@@ -290,9 +264,9 @@ module.exports = function (app, addon) {
                   });
                 }
 
-                if (assets.screenshots) { 
+                if (assets.screenshots) {
                   const image = assets.screenshots[assets.screenshots.length-1];
-                  card.thumbnail = { 
+                  card.thumbnail = {
                     url: `https://${sauceAccount.options.hostname}/rest/v1/${job.owner}/jobs/${job.id}/assets/${image}?auth=${auth}`
                   };
                 }
@@ -300,11 +274,11 @@ module.exports = function (app, addon) {
                 if (card.description) { msg = msg + card.description.value; }
 
                 var opts = {
-                  'options': {
-                    'message_format': 'html',
-                    'color': jobColorStatus[job.consolidated_status] || 'gray',
-                    'message': msg
-                  }
+                  message_format: 'html',
+                  color: jobColorStatus[job.consolidated_status] || 'gray',
+                  message: msg,
+                  from: from,
+                  attach_to: req.body.item.message.mid
                 };
                 console.log('card', card);
                 return hipchat.sendMessage(req.clientInfo, req.identity.roomId, msg, opts, card);
@@ -341,7 +315,7 @@ module.exports = function (app, addon) {
         let [clientKey] = clientInfoStr.split(':');
         addon.loadClientInfo(clientKey).then(clientInfo => {
           return getGlanceData(clientKey)
-            .then(data => hipchat.updateGlance(clientInfo, { groupId: clientInfo.groupId }, 'sample.glance', data));
+            .then(data => hipchat.updateGlance(clientInfo, { groupId: clientInfo.groupId }, 'saucelabs.glance', data));
         });
       });
     });
