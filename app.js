@@ -96,6 +96,12 @@ if (devEnv) app.use(errorHandler());
 // Wire up your routes using the express and `atlassian-connect-express` objects
 routes(app, addon);
 
+if (process.env.ROLLBAR_SERVER_TOKEN) {
+  var rollbar = require('rollbar');
+  // Use the rollbar error handler to send exceptions to your rollbar account
+  app.use(rollbar.errorHandler(process.env.ROLLBAR_SERVER_TOKEN));
+}
+
 // Boot the damn thing
 http.createServer(app).listen(port, function(){
   console.log()
