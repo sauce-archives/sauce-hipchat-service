@@ -16,7 +16,6 @@ SauceLabs.prototype.showJob = function (id, callback) {
 };
 
 SauceLabs.prototype.getBuild = function (name, callback) {
-  console.log(arguments);
   this.send({
     method: 'GET',
     path: ':username/builds/:name',
@@ -73,7 +72,7 @@ module.exports = function (app, addon) {
 
   // simple healthcheck
   router.get('/healthcheck', function (req, res) {
-    res.send('OK');
+    res.json({ status: 'OK', version: require('../package.json').version });
   });
 
   router.get('/', function (req, res) {
