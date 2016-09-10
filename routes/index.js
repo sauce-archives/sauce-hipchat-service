@@ -202,7 +202,6 @@ module.exports = function (app, addon) {
   const messageUrlPattern = /https?:\/\/(?:[a-zA-Z0-9_-]+\.dev\.saucelabs\.net|saucelabs\.com)(?:\/beta)?\/tests\/([a-zA-Z0-9]{32})/;
   router.post('/webhooks/saucelabs_url', addon.authenticate(), function (req, res) {
     const message = req.body.item.message.message;
-    const mid = req.body.item.message.id;
     const results = messageUrlPattern.exec(message);
     const id = results[1];
     if (!id) {
@@ -275,8 +274,7 @@ module.exports = function (app, addon) {
                 var opts = {
                   message_format: 'html',
                   color: jobColorStatus[job.consolidated_status] || 'gray',
-                  message: msg,
-                  attach_to: mid
+                  message: msg
                 };
                 return hipchat.sendMessage(req.clientInfo, req.identity.roomId, msg, opts, card);
               });
