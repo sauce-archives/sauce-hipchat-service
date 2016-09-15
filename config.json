@@ -96,7 +96,10 @@
     "store": {
       "adapter": "jugglingdb",
       "type": "mysql",
-      "url": "$DATABASE_URL"
+      "database": "$DATABASE_NAME",
+      "user": "$DATABASE_USERNAME",
+      "password": "$DATABASE_PASSWORD",
+      "socketPath": "$DATABASE_SOCKETPATH",
     },
     // Make sure that your add-on can only be registered by the hosts on
     // these domains.
