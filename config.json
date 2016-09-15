@@ -97,7 +97,7 @@
       "adapter": "jugglingdb",
       "type": "mysql",
       "database": "$DATABASE_NAME",
-      "user": "$DATABASE_USERNAME",
+      "username": "$DATABASE_USERNAME",
       "password": "$DATABASE_PASSWORD",
       "socketPath": "$DATABASE_SOCKETPATH",
     },
