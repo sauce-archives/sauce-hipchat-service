@@ -76,8 +76,9 @@
     //   "url": "redis://localhost:6379"
     // },
     "store": {
-      "adapter": "redis",
-      "url": "redis://localhost:6379"
+      "adapter": "jugglingdb",
+      "type": "sqlite3",
+      "database": "store.db"
     }
   },
 
@@ -89,15 +90,13 @@
     // On a PaaS host like Heroku, the runtime environment will provide the
     // HTTP port to you via the PORT environement variable, so we configure
     // that to be honored here.
-    "port": "$PORT",
+    "port": "3000",
     // This is the public URL to your production add-on.
     "localBaseUrl": "https://your-subdomain.herokuapp.com",
     "store": {
-      // Let's use Redis as our default data store in prod
-      "adapter": "redis",
-      // Again, a PaaS host like Heroku will probably provide the db connection
-      // URL to you through the environment, so we tell atlassian-connect-express to use that value.
-      "url": "$REDIS_URL"
+      "adapter": "jugglingdb",
+      "type": "mysql",
+      "url": "$DATABASE_URL"
     },
     // Make sure that your add-on can only be registered by the hosts on
     // these domains.
