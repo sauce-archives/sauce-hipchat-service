@@ -282,8 +282,8 @@ module.exports = function (app, addon) {
         });
       }).catch(err => {
         console.log('err', err);
-        if (err.error) { err = err.error; }
-        hipchat.sendMessage(req.clientInfo, req.identity.roomId, `Unable to process url: ${err}`);
+        hipchat.sendMessage(req.clientInfo, req.identity.roomId, `Unable to process url`);
+        throw err;
       }).then(() => res.json({}));
   });
 
@@ -307,7 +307,7 @@ module.exports = function (app, addon) {
     return addon.settings.getAllClientInfos().then(clients => {
       return clients.map(clientInfo => {
         return getGlanceData(clientInfo.clientKey)
-          .then(data => hipchat.updateGlance(clientInfo, { groupId: clientInfo.groupId }, 'saucelabs.glance', data));
+          .then(data => hipchat.updateGlance(clientInfo, clientInfo.roomId || '', 'saucelabs.glance', data));
       });
     });
   };
