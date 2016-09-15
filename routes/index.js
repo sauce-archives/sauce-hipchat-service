@@ -296,22 +296,18 @@ module.exports = function (app, addon) {
 
   // Clean up clients when uninstalled
   addon.on('uninstalled', function (id) {
-    addon.settings.client.keys(id + ':*', function (err, rep) {
-      rep.forEach(function (k) {
-        addon.logger.info('Removing key:', k);
-        addon.settings.client.del(k);
-      });
+    // Make sure to add any new scopes
+    ['clientInfo', 'send_notification', 'sauceAccount'].forEach(function (k) {
+      addon.logger.info('Removing key:', k);
+      addon.settings.del(k, id);
     });
   });
 
   const updateAllGlances = () => {
-    addon.settings.client.keys('*:clientInfo', function (err, keys) {
-      keys.forEach(clientInfoStr => {
-        let [clientKey] = clientInfoStr.split(':');
-        addon.loadClientInfo(clientKey).then(clientInfo => {
-          return getGlanceData(clientKey)
-            .then(data => hipchat.updateGlance(clientInfo, { groupId: clientInfo.groupId }, 'saucelabs.glance', data));
-        });
+    return addon.settings.getAllClientInfos().then(clients => {
+      return clients.map(clientInfo => {
+        return getGlanceData(clientInfo.clientKey)
+          .then(data => hipchat.updateGlance(clientInfo, { groupId: clientInfo.groupId }, 'saucelabs.glance', data));
       });
     });
   };
