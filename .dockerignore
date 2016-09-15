@@ -5,3 +5,4 @@ users.json
 test.js
 tags
 node_modules
+store.db
