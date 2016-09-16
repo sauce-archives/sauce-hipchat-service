@@ -24,6 +24,7 @@ var os = require('os');
 
 // Let's use Redis to store our data
 ac.store.register('redis', require('atlassian-connect-express-redis'));
+ac.store.register('cloud_sql', require('./lib/store.js'));
 
 // Anything in ./public is served up as static content
 var staticDir = path.join(__dirname, 'public');
