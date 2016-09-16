@@ -22,8 +22,6 @@ var http = require('http');
 var path = require('path');
 var os = require('os');
 
-// Let's use Redis to store our data
-ac.store.register('redis', require('atlassian-connect-express-redis'));
 ac.store.register('cloud_sql', require('./lib/store.js'));
 
 // Anything in ./public is served up as static content
@@ -31,7 +29,7 @@ var staticDir = path.join(__dirname, 'public');
 // Anything in ./views are HBS templates
 var viewsDir = __dirname + '/views';
 // Your routes live here; this is the C in MVC
-var routes = require('./routes');
+var routes = require('./lib/routes');
 // Bootstrap Express
 var app = express();
 // Bootstrap the `atlassian-connect-express` library
@@ -92,21 +90,19 @@ HandlebarsIntl.registerWith(hbs);
 app.use(express.static(staticDir));
 
 // Show nicer errors when in dev mode
-if (devEnv) app.use(errorHandler());
-
-// Wire up your routes using the express and `atlassian-connect-express` objects
-routes(app, addon);
-
 if (process.env.ROLLBAR_SERVER_TOKEN) {
   var rollbar = require('rollbar');
   // Use the rollbar error handler to send exceptions to your rollbar account
   app.use(rollbar.errorHandler(process.env.ROLLBAR_SERVER_TOKEN));
+} else if (devEnv) {
+  app.use(errorHandler());
 }
+
+// Wire up your routes using the express and `atlassian-connect-express` objects
+routes(app, addon);
 
 // Boot the damn thing
 http.createServer(app).listen(port, function(){
   console.log()
   console.log('Add-on server running at '+ (addon.config.localBaseUrl()||('http://' + (os.hostname()) + ':' + port)));
-  // Enables auto registration/de-registration of add-ons into a host in dev mode
-  if (devEnv) addon.register();
 });
