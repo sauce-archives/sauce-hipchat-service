@@ -239,7 +239,7 @@ module.exports = function (app, addon) {
                 var card = {
                   'style': 'application',
                   'id': uuid.v4(),
-                  'metadata': { 'sauceJobId': id },
+                  'metadata': { 'sauceJobId': id, 'isSauceMessage': true },
                   'format': 'medium',
                   'url': `https://${sauceAccount.options.hostname}/beta/tests/${id}?auth=${auth}`,
                   'title': job.name,

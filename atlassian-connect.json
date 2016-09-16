@@ -126,7 +126,9 @@
         "conditions": [{
           "condition": "card_matches",
           "params": {
-            "sender_addon_key": "sauce-hipchat-service"
+            "metadata": [
+              { "attr": "isSauceMessage", "eq": true }
+            ]
           }
         }]
       },
@@ -138,7 +140,9 @@
         "conditions": [{
           "condition": "card_matches",
           "params": {
-            "sender_addon_key": "sauce-hipchat-service"
+            "metadata": [
+              { "attr": "isSauceMessage", "eq": true }
+            ]
           }
         }]
       },
@@ -150,7 +154,9 @@
         "conditions": [{
           "condition": "card_matches",
           "params": {
-            "sender_addon_key": "sauce-hipchat-service"
+            "metadata": [
+              { "attr": "isSauceMessage", "eq": true }
+            ]
           }
         }]
       }
