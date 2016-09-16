@@ -64,7 +64,7 @@
     "dialog": [
       {
     		"key": "job.details.dialog",
-        "title": { "value": "Job Details Dialog" },
+        "title": { "value": "Test Details Dialog" },
         "url": "{{localBaseUrl}}/dialog/job/{jobId}",
         "options": {
           "style": "normal",
@@ -73,7 +73,7 @@
       },
       {
     		"key": "job.details.dialog-meta",
-        "title": { "value": "Job Details Dialog" },
+        "title": { "value": "Test Details Dialog" },
         "url": "{{localBaseUrl}}/dialog/job/{message.metadata.sauceJobId}",
         "options": {
           "style": "normal",
@@ -127,7 +127,7 @@
           "condition": "card_matches",
           "params": {
             "metadata": [
-              { "attr": "isSauceMessage", "eq": true }
+              { "attr": "sender_addon_key", "eq": "sauce-hipchat-service" }
             ]
           }
         }]
@@ -141,7 +141,7 @@
           "condition": "card_matches",
           "params": {
             "metadata": [
-              { "attr": "isSauceMessage", "eq": true }
+              { "attr": "sender_addon_key", "eq": "sauce-hipchat-service" }
             ]
           }
         }]
@@ -155,7 +155,7 @@
           "condition": "card_matches",
           "params": {
             "metadata": [
-              { "attr": "isSauceMessage", "eq": true }
+              { "attr": "sender_addon_key", "eq": "sauce-hipchat-service" }
             ]
           }
         }]
