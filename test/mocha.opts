@@ -1,1 +1,2 @@
---require=env-test
+--require=env-test --require=async-to-gen/register
+
