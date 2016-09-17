@@ -1,10 +1,11 @@
 var webpack = require('webpack');
+var path = require('path');
 
 module.exports = {
   devtool: 'cheap-source-map',
-  entry: './lib/frontend/app.js',
+  entry: path.join(__dirname, './lib/frontend/app.js'),
   output: {
-    path: __dirname + '/public',
+    path: path.join(__dirname, '/public'),
     publicPath: '/',
     filename: 'js/bundle.js'
   },

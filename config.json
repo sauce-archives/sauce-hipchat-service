@@ -90,8 +90,17 @@
     }
   },
 
-  // This is the production add-on configuration, which is enabled by setting
-  // the NODE_ENV=production environment variable.
+  "test": {
+    "usePublicKey": false,
+    "port": "0",
+    "localBaseUrl": "https://your-subdomain.herokuapp.com",
+    "store": {
+      "adapter": "jugglingdb",
+      "type": "memory"
+    },
+    "whitelist": [ "*.hipchat.com" ]
+  },
+
   "production": {
     // HipChat add-ons don't use asymmetric key algos
     "usePublicKey": false,
