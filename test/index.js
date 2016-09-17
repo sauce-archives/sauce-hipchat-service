@@ -70,6 +70,28 @@ describe("SauceForSlack", function() {
           xdmhost: `https://${hostname}`
         })
         .expect(200)
+        .then(function (res) {
+          return res.text.should.not.containEql("Successfully logged in");
+        })
     });
+  });
+  it('/config should return already logged in', function() {
+    var clientInfo = makeRandomClient();
+    var payload = makeJWTPayload(clientInfo);
+    var sauceAccount = { hostname: "fakeServer", username: "halkeye", password: "fakepassword" };
+    return app.get('addon').settings.set('clientInfo', clientInfo, clientInfo.clientKey).then(() => {
+      return app.get('addon').settings.set('sauceAccount', sauceAccount, clientInfo.clientKey).then(() => {
+        return request(app)
+          .get('/config')
+          .query({
+            signed_request: payload,
+            xdmhost: `https://${hostname}`
+          })
+          .expect(200)
+          .then(function (res) {
+            return res.text.should.containEql("Successfully logged in");
+          })
+        });
+      });
   });
 });
