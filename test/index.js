@@ -1,8 +1,39 @@
 /* eslint-env mocha */
 require('should');
+var uuid = require('uuid');
 var request = require('supertest-as-promised');
-var app = require('../lib/app.js');
 var jwt = require('jsonwebtoken');
+
+var app = require('../lib/app.js');
+
+var fixtures = {
+  clientInfo: require('./fixtures/clientInfo.json')
+};
+
+var makeRandomClient = function() {
+  // clone
+  var client = Object.assign({}, fixtures.clientInfo);
+  client.clientKey = uuid.v4();
+  client.oauthSecret = uuid.v4();
+  return client;
+};
+
+var makeJWTPayload = function(clientInfo) {
+  var now = Math.floor(Date.now() / 1000);
+  var payload = {
+    "exp": now + 600,
+    "iss": clientInfo.clientKey,
+    "prn": "client_id",
+    "jti": uuid.v4(),
+    "context": {
+      "room_id": 3038073,
+      "user_tz": "America/Los_Angeles"
+    },
+    "iat": now,
+    "sub": "client_id"
+  };
+  return jwt.sign(payload, clientInfo.oauthSecret);
+}
 
 var hostname = (function() {
   if (process.env.AC_LOCAL_BASE_URL) {
@@ -29,9 +60,16 @@ describe("SauceForSlack", function() {
       .expect(200)
   });
   it('/config should return config page', function() {
-    return request(app)
-      .get('/config')
-      .set('Authentication', jwt.sign(payload, 'superSecret'))
-      .expect(200)
+    var clientInfo = makeRandomClient();
+    var payload = makeJWTPayload(clientInfo);
+    return app.get('addon').settings.set('clientInfo', clientInfo, clientInfo.clientKey).then(() => {
+      return request(app)
+        .get('/config')
+        .query({
+          signed_request: payload,
+          xdmhost: `https://${hostname}`
+        })
+        .expect(200)
+    });
   });
 });
