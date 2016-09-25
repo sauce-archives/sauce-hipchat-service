@@ -248,8 +248,44 @@ describe("SauceForHipchat", function() {
       this.app.hipchat.sendMessage.getCall(0).args[3].message_format.should.eql('html');
       this.app.hipchat.sendMessage.getCall(0).args[3].color.should.eql('green');
       /* card */
-      this.app.hipchat.sendMessage.getCall(0).args[4].should.eql(['message_format', 'color', 'message']);
+      Object.keys(this.app.hipchat.sendMessage.getCall(0).args[4]).should.eql([
+        'style', 'id', 'metadata', 'format', 'url', 'title', 'attributes', 'thumbnail'
+      ]);
+      this.app.hipchat.sendMessage.getCall(0).args[4].style.should.eql('application');
+      this.app.hipchat.sendMessage.getCall(0).args[4].metadata.should.eql(
+        { sauceJobId: 'eebd86f4efd74643b98dfa53ac8c7505', isSauceMessage: true }
+      );
+      this.app.hipchat.sendMessage.getCall(0).args[4].format.should.eql('medium');
+      this.app.hipchat.sendMessage.getCall(0).args[4].url.should.eql('hipchat://www.hipchat.com/room/3123340?target=job.details.dialog-meta');
+      this.app.hipchat.sendMessage.getCall(0).args[4].title.should.eql('verifyCommentInputTest');
+      this.app.hipchat.sendMessage.getCall(0).args[4].attributes.should.eql([
+        { label: 'Owner', value: { label: 'halkeye' } },
+        { label: 'Status', value: { label: 'passed' } },
+        { label: 'Platform', value: { label: 'Windows 2008 firefox 35.0.' } },
+        { label: 'Start', value: { label: 'Sep 22, 2016 3:47 PM' } },
+        { label: 'End', value: { label: 'Sep 22, 2016 3:48 PM' } },
+        { label: 'Duration', value: { label: 'a few seconds' } }
+      ]);
+      this.app.hipchat.sendMessage.getCall(0).args[4].thumbnail.url.should.match(
+        /https:\/\/saucelabs.com\/rest\/v1\/halkeye\/jobs\/eebd86f4efd74643b98dfa53ac8c7505\/assets\/0006screenshot.png\?auth=.*/
+      );
+      this.app.hipchat.sendMessage.getCall(0).args[4].id.should.match(/.*/);
     });
   });
+  /*
+  addonOnInstall(clientKey, clientInfo, req) {
+    this.hipchat.sendMessage(clientInfo, req.body.roomId, 'The ' + this.addon.descriptor.name + ' add-on has been installed in this room');
+  }
+
+  addonOnUninstall(clientKey) {
+    // Make sure to add any new scopes
+    ['clientInfo', 'send_notification', 'sauceAccount'].forEach(function (k) {
+      this.addon.logger.info('Removing key:', k);
+      this.addon.settings.del(k, clientKey);
+    });
+  }
+
+  updateAllGlances() {
+  */
 });
 
