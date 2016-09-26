@@ -76,9 +76,10 @@
     //   "url": "redis://localhost:6379"
     // },
     "store": {
+      /*
       "type": "sqlite3",
       "database": "store.db"
-      /*
+      */
       "adapter": "cloud_sql",
       "settings": {
         "dialect": "mysql",
@@ -86,7 +87,6 @@
         "username": "root",
         "password": ""
       }
-      */
     }
   },
 
@@ -102,13 +102,8 @@
   },
 
   "production": {
-    // HipChat add-ons don't use asymmetric key algos
     "usePublicKey": false,
-    // On a PaaS host like Heroku, the runtime environment will provide the
-    // HTTP port to you via the PORT environement variable, so we configure
-    // that to be honored here.
     "port": "3000",
-    // This is the public URL to your production add-on.
     "localBaseUrl": "https://your-subdomain.herokuapp.com",
     "store": {
       "adapter": "cloud_sql",
@@ -123,10 +118,6 @@
         "logging": false
       }
     },
-    // Make sure that your add-on can only be registered by the hosts on
-    // these domains.
-    "whitelist": [
-      "*.hipchat.com"
-    ]
+    "whitelist": [ "*.hipchat.com" ]
   }
 }

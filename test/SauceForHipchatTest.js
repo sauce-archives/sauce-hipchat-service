@@ -45,7 +45,9 @@ class FakeStore {
 describe("SauceForHipchat", function() {
 	beforeEach(function () {
     this.addon = {
-      settings: new FakeStore()
+      logger: { info: sinon.spy() },
+      settings: new FakeStore(),
+      descriptor: { name: 'Sauce For Hipchat' }
     };
     this.app = new SauceForHipchat(this.addon);
     this.app.hipchat = {
@@ -272,19 +274,21 @@ describe("SauceForHipchat", function() {
       this.app.hipchat.sendMessage.getCall(0).args[4].id.should.match(/.*/);
     });
   });
+  it('addonOnInstall', async function() {
+    this.req.body.roomId = '1234';
+    await this.app.addonOnInstall(this.req.clientInfo.clientKey, this.req.clientInfo, this.req);
+
+    this.app.hipchat.sendMessage.calledOnce.should.eql(true);
+    this.app.hipchat.sendMessage.getCall(0).args[0].should.eql(this.req.clientInfo);
+    this.app.hipchat.sendMessage.getCall(0).args[1].should.eql(this.req.body.roomId);
+    this.app.hipchat.sendMessage.getCall(0).args[2].should.eql(
+      'The Sauce For Hipchat add-on has been installed in this room'
+    );
+  });
+  it('addonOnUninstall', async function() {
+    await this.app.addonOnUninstall(this.req.clientInfo.clientKey);
+  });
   /*
-  addonOnInstall(clientKey, clientInfo, req) {
-    this.hipchat.sendMessage(clientInfo, req.body.roomId, 'The ' + this.addon.descriptor.name + ' add-on has been installed in this room');
-  }
-
-  addonOnUninstall(clientKey) {
-    // Make sure to add any new scopes
-    ['clientInfo', 'send_notification', 'sauceAccount'].forEach(function (k) {
-      this.addon.logger.info('Removing key:', k);
-      this.addon.settings.del(k, clientKey);
-    });
-  }
-
   updateAllGlances() {
   */
 });
