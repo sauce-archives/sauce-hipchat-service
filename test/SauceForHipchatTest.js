@@ -26,18 +26,28 @@ class FakeStore {
     this.data = {};
   }
 
-  get(key) {
+  get(key, clientKey) {
+    key = `${clientKey}:${key}`;
     return Promise.resolve(this.data[key]);
   }
 
-  set(key, value) {
+  set(key, value, clientKey) {
+    key = `${clientKey}:${key}`;
     this.data[key] = value;
     return Promise.resolve();
   }
 
-  del(key) {
-    delete this.data[key];
+  del(key, clientKey) {
+    key = `${clientKey}:${key}`;
     return Promise.resolve();
+  }
+
+  getAllClientInfos() {
+    return Promise.resolve(
+      Object.keys(this.data)
+      .filter(key => key.includes('clientInfo'))
+      .map(key => this.data[key])
+    );
   }
 }
 
@@ -288,8 +298,33 @@ describe("SauceForHipchat", function() {
   it('addonOnUninstall', async function() {
     await this.app.addonOnUninstall(this.req.clientInfo.clientKey);
   });
-  /*
-  updateAllGlances() {
-  */
+  describe('updateAllGlances', function() {
+    it('logged out', async function() {
+      await this.addon.settings.set('clientInfo', this.req.clientInfo, this.req.clientInfo.clientKey);
+      await this.app.updateAllGlances();
+
+      this.app.hipchat.updateGlance.calledOnce.should.eql(true);
+      this.app.hipchat.updateGlance.getCall(0).args[1].should.eql('');
+      this.app.hipchat.updateGlance.getCall(0).args[2].should.eql('saucelabs.glance');
+      this.app.hipchat.updateGlance.getCall(0).args[3].should.eql({
+        label: { type: 'html', value: 'Sauce Labs' },
+        status: { type: 'lozenge', value: { label: 'Needs Login', type: 'error' } }
+      });
+
+    });
+    it('logged in', async function() {
+      await this.addon.settings.set('sauceAccount', { username: "halkeye", password: "fakepassword" }, this.req.clientInfo.clientKey);
+      await this.addon.settings.set('clientInfo', this.req.clientInfo, this.req.clientInfo.clientKey);
+      await this.app.updateAllGlances();
+
+      this.app.hipchat.updateGlance.calledOnce.should.eql(true);
+      this.app.hipchat.updateGlance.getCall(0).args[1].should.eql('');
+      this.app.hipchat.updateGlance.getCall(0).args[2].should.eql('saucelabs.glance');
+      this.app.hipchat.updateGlance.getCall(0).args[3].should.eql({
+        label: { type: 'html', value: 'Sauce Labs' }
+      });
+
+    });
+  });
 });
 
