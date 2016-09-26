@@ -12,7 +12,6 @@ WORKDIR /usr/src/app
 COPY .babelrc .eslintrc *.js atlassian-connect.json config.json package.json /usr/src/app/
 COPY lib/ /usr/src/app/lib/
 COPY public/ /usr/src/app/public/
-COPY routes/ /usr/src/app/routes/
 COPY views/ /usr/src/app/views/
 RUN npm install --only=dev && $(npm bin)/webpack --config=webpack.config.js -p
 #RUN npm test
