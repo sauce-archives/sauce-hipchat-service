@@ -1,9 +1,21 @@
-# Atlassian Add-on using Express
+# Slack Foodee
 
-Congratulations! You've successfully created a HipChat Connect Add-on using the Express web application framework.
+[![Build Status](https://travis-ci.org/saucelabs/sauce-hipchat-service?branch=master)](https://travis-ci.org/saucelabs/sauce-hipchat-service)
 
-## What's next?
+Sauce Labs' integration with Hipchat
 
-* [Read the tutorial](https://developer.atlassian.com/hipchat/tutorials/getting-started-with-atlassian-connect-express-node-js).
-* [Read the HipChat Connect guides](https://developer.atlassian.com/hipchat/guide)
-* [View the HipChat API reference](https://www.hipchat.com/docs/apiv2)
+## Start dev server (nodemon, restarts on change)
+
+`npm run dev`
+
+## Start real server
+
+`npm run start`
+
+## Run Tests
+
+`npm run test`
+
+## Watch run tests
+
+`npm run test -- -w`
