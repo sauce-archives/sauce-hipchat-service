@@ -13,6 +13,11 @@ COPY .babelrc .eslintrc *.js atlassian-connect.json config.json package.json /us
 COPY lib/ /usr/src/app/lib/
 COPY public/ /usr/src/app/public/
 COPY views/ /usr/src/app/views/
+# UGH - okay fine
+# Fix bug https://github.com/npm/npm/issues/9863 for issues with docker + npm
+RUN cd $(npm root -g)/npm \
+  && npm install fs-extra \
+  && sed -i -e s/graceful-fs/fs-extra/ -e s/fs\.rename/fs.move/ ./lib/utils/rename.js
 RUN npm install --only=dev && $(npm bin)/webpack --config=webpack.config.js -p
 #RUN npm test
 RUN npm prune --production
