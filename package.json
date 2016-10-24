@@ -1,6 +1,6 @@
 {
   "name": "sauce-hipchat-service",
-  "version": "0.0.10",
+  "version": "0.1.0",
   "private": true,
   "engines": {
     "node": "v6.4.0"
