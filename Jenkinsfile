@@ -20,5 +20,5 @@ node('docker') {
    stage 'Build'
    def version = packageFileVersion()
    // Run the maven build
-   sh "docker build -t hipchat-dance-party-service:v\${version} ."
+   sh "docker build -t sauce-hipchat-service:v\${version} ."
 }
