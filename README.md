@@ -1,4 +1,4 @@
-# Slack Foodee
+# Sauce Labs Hipchat Service
 
 [![Build Status](https://travis-ci.org/saucelabs/sauce-hipchat-service?branch=master)](https://travis-ci.org/saucelabs/sauce-hipchat-service)
 
