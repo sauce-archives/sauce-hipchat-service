@@ -7,7 +7,7 @@
   },
   "scripts": {
     "docker:build": "docker build -t gcr.io/my-kubernetes-1269/sauce-hipchat-service:v$(node -e \"console.log(require('./package.json').version)\") .",
-    "docker:push": "gcloud docker push gcr.io/my-kubernetes-1269/sauce-hipchat-service:v$(node -e \"console.log(require('./package.json').version)\")",
+    "docker:push": "gcloud docker -- push gcr.io/my-kubernetes-1269/sauce-hipchat-service:v$(node -e \"console.log(require('./package.json').version)\")",
     "docker:deploy": "kubectl rolling-update --container sauce-hipchat-svc sauce-hipchat-ctrl --image-pull-policy Always --image=gcr.io/my-kubernetes-1269/sauce-hipchat-service:v$(node -e \"console.log(require('./package.json').version)\")",
     "build": "./bin/build.sh",
     "heroku-postbuild": "./bin/build.sh",
