@@ -13,7 +13,7 @@
     "heroku-postbuild": "./bin/build.sh",
     "dev": "nodemon -w app.js -w lib -w atlassian-connect.json -w config.json -w routes/index.js app.js",
     "start": "node app.js",
-    "test": "NODE_ENV=test mocha"
+    "test": "TZ=GMT NODE_ENV=test mocha"
   },
   "dependencies": {
     "atlassian-connect-express": "^2.0.0",
@@ -52,17 +52,18 @@
   },
   "devDependencies": {
     "async-to-gen": "^1.1.3",
+    "babel-core": "^6.18.2",
     "babel-eslint": "^6.1.2",
-    "babel-loader": "^6.2.5",
+    "babel-loader": "^6.2.7",
     "babel-plugin-transform-class-properties": "^6.11.5",
     "babel-preset-es2015": "^6.13.2",
     "babel-preset-react": "^6.11.1",
     "css-loader": "^0.23.1",
     "env-test": "^1.0.0",
-    "eslint": "^3.3.1",
+    "eslint": "^3.9.1",
     "eslint-config-semistandard": "^7.0.0-beta.0",
-    "eslint-config-standard": "^6.0.0",
-    "eslint-plugin-promise": "^2.0.1",
+    "eslint-config-standard": "^6.2.1",
+    "eslint-plugin-promise": "^3.3.0",
     "eslint-plugin-react": "^6.1.2",
     "eslint-plugin-standard": "^2.0.0",
     "exports-loader": "^0.6.3",

@@ -274,8 +274,8 @@ describe("SauceForHipchat", function() {
         { label: 'Owner', value: { label: 'halkeye' } },
         { label: 'Status', value: { label: 'passed' } },
         { label: 'Platform', value: { label: 'Windows 2008 firefox 35.0.' } },
-        { label: 'Start', value: { label: 'Sep 22, 2016 3:47 PM' } },
-        { label: 'End', value: { label: 'Sep 22, 2016 3:48 PM' } },
+        { label: 'Start', value: { label: 'Sep 22, 2016 10:47 PM' } },
+        { label: 'End', value: { label: 'Sep 22, 2016 10:48 PM' } },
         { label: 'Duration', value: { label: 'a few seconds' } }
       ]);
       this.app.hipchat.sendMessage.getCall(0).args[4].thumbnail.url.should.match(
