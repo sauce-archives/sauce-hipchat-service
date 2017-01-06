@@ -5,6 +5,12 @@
   "engines": {
     "node": "v6.4.0"
   },
+  "author": "Gavin Mogan <gavin@saucelabs.com> (https://www.saucelabs.com/)",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saucelabs/sauce-hipchat-service.git"
+  },
   "scripts": {
     "docker:build": "docker build -t gcr.io/my-kubernetes-1269/sauce-hipchat-service:v$(node -e \"console.log(require('./package.json').version)\") .",
     "docker:push": "gcloud docker -- push gcr.io/my-kubernetes-1269/sauce-hipchat-service:v$(node -e \"console.log(require('./package.json').version)\")",
